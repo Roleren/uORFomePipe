@@ -4,16 +4,18 @@
 \alias{predictUorfs}
 \title{Predict uORFs using random forrest classification}
 \usage{
-predictUorfs(tissues, nthreads_h2o = 40, max_mem_size = "200G")
+predictUorfs(
+  tissues,
+  nthreads_h2o = max(45, detectCores()/3),
+  max_mem_size = "200G"
+)
 }
 \arguments{
 \item{tissues}{Tissues to train on, use all if you want all in one}
 
-\item{nthreads_h2o}{number of cores for H20: default (40)}
+\item{nthreads_h2o}{number of cores for H20: default max(45, detectCores()/3)}
 
 \item{max_mem_size}{max allowed memory for H20: default ("200G")}
-
-\item{nthreads_pred}{number of cores for R: default (12)}
 }
 \description{
 Training data

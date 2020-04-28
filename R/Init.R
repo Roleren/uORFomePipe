@@ -6,14 +6,20 @@
 #' @param dataFolder ORFik experiment that contains Annotation
 #' @param makeDatabase default FALSE, set to TRUE if you want
 #' to predict translated uORFs
-#' @param force.remake logical (default: FALSE), force all folders to be remade.
-#' Will not delete existing folders
+#' @param organism scientific name of organism,
+#' like Homo sapiens, Danio rerio, etc.
+#' @param biomart default "not_decided" will be automaticly detected by
+#' organism name. Set it if you know.
 #' @importFrom tools file_ext
 #' @export
 orfikDirs <- function(mainPath, df.rfp, df.rna, df.cage,
-                      force.remake = FALSE) {
+                      organism, biomart = "not_decided") {
   setwd(mainPath)
   message("Welcome, setting up uORFome folders")
+  message(p("Registered organism is: ", organism))
+  biomart_dataset <- getBiomartFromOrganism(organism)
+
+
   message(paste("main path for project will be: ", mainPath))
   # Set directory paths
   resultsFolder <- p(mainPath, "/results")
@@ -52,6 +58,8 @@ orfikDirs <- function(mainPath, df.rfp, df.rna, df.cage,
   assign("resultsFolder", resultsFolder, envir = .GlobalEnv)
   assign("dataFolder", dataFolder, envir = .GlobalEnv)
   assign("featuresFolder", featuresFolder, envir = .GlobalEnv)
+  assign("organism", organism, envir = .GlobalEnv)
+  assign("biomart_dataset", biomart_dataset, envir = .GlobalEnv)
   # now validate all that directories exist
   if(!all(dir.exists(c(resultsFolder, dataFolder)))){
     stop(p("Could not find directory: ", c(resultsFolder, dataFolder)[!file.exists(c(resultsFolder, dataFolder))]))
@@ -98,6 +106,14 @@ orfikDirs <- function(mainPath, df.rfp, df.rna, df.cage,
   assign("gtfdb", p(dataFolder, "/Gtf.db"), envir = .GlobalEnv)
 
   validateInputs(df.rfp, df.rna, df.cage)
+
+  message("This is default backend:")
+  print(registered()[1])
+  message(p("Using ", registered()[[1]]$workers, " threads from CPU"))
+  message(p("Example on how to register default backend to 10 cores:"))
+  print("register(MulticoreParam(workers = 10), default=TRUE)")
+
+
   message("uORFome is now ready")
   return(invisible(NULL))
 }

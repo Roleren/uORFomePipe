@@ -4,13 +4,16 @@
 \alias{orfikDirs}
 \title{Init uORFome}
 \usage{
-orfikDirs(mainPath, df.rfp, df.rna, df.cage, force.remake = FALSE)
+orfikDirs(mainPath, df.rfp, df.rna, df.cage, organism, biomart = "not_decided")
 }
 \arguments{
 \item{mainPath}{folder for uORFome to put results}
 
-\item{force.remake}{logical (default: FALSE), force all folders to be remade.
-Will not delete existing folders}
+\item{organism}{scientific name of organism,
+like Homo sapiens, Danio rerio, etc.}
+
+\item{biomart}{default "not_decided" will be automaticly detected by
+organism name. Set it if you know.}
 
 \item{dataFolder}{ORFik experiment that contains Annotation}
 

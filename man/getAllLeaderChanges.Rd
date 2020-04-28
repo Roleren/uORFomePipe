@@ -4,9 +4,7 @@
 \alias{getAllLeaderChanges}
 \title{Get variance between different leader versions}
 \usage{
-getAllLeaderChanges(
-  outname = "/export/valenfs/projects/uORFome/leaderWidthChangesPerLeader.rdata"
-)
+getAllLeaderChanges()
 }
 \description{
 For validation

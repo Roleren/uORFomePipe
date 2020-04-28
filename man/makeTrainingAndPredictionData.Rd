@@ -4,7 +4,13 @@
 \alias{makeTrainingAndPredictionData}
 \title{All features from sequence, Riboseq and RNAseq}
 \usage{
-makeTrainingAndPredictionData(df.rfp, df.rna, tissue, organism, biomart)
+makeTrainingAndPredictionData(
+  df.rfp,
+  df.rna,
+  tissue,
+  organism,
+  biomart = get("biomart_dataset", mode = "character", envir = .GlobalEnv)
+)
 }
 \description{
 Step 5 of uORFome pipeline

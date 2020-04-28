@@ -71,16 +71,13 @@ startAndStopCodonPlots <- function() {
 }
 
 #' Venn diagram between two tissues
+#' @import VennDiagram
 varianceTissueUsage <- function(tissue1, tissue2, pred = readTable("tissueAtlasByCageAndPred", with.IDs = FALSE)) {
-
+  stop("not working yet")
   tab <- table(pred[,get(tissue1)], pred[,get(tissue2)])
   chi <- chisq.test(tab)
   chi$residuals
-  # plan:
-  # do pairwise tests, see that things are ok.
-  # venn diagram:
 
-  library(VennDiagram)
   grid.newpage()
   boOver <- draw.pairwise.venn(15021, 14213,
                                11523, category = c("Ovary", "Brain"),
@@ -136,26 +133,14 @@ validateStartCodons <- function(uniqueIDs, startCodons){
 #' Get variance between different leader versions
 #'
 #' For validation
-getAllLeaderChanges <- function(outname = "/export/valenfs/projects/uORFome/leaderWidthChangesPerLeader.rdata"){
-  if(!file.exists(p(dataFolder,"/leaderOriginalWidths.rdata"))){
-    getLeaders()
-    widths <- ORFik:::widthPerGroup(fiveUTRs)
-    save(widths, file = p(dataFolder,"/leaderOriginalWidths.rdata"))
-    rm(fiveUTRs)
-  }
+#' @import ggplot2
+getAllLeaderChanges <- function(){
+  getLeaders()
+  widths <- widthPerGroup(fiveUTRs)
 
-  setwd("/export/valenfs/projects/uORFome/RCode1/")
-  pipelineCluster(75)
-  nLeadersList = length(leadersList)
-  rm(fiveUTRs)
-  output <- foreach(i=1:nLeadersList, .combine = 'rbind') %dopar% {
-    source("./uorfomeGeneratorHelperFunctions.R")
-    leadersList = list.files(leadersFolder)
-
-    load(p(dataFolder,"/leaderOriginalWidths.rdata"))
-    load(p(leadersFolder,leadersList[i]))
-    widthsCage <- ORFik:::widthPerGroup(fiveUTRs)
-
+  leadersList = list.files(leadersFolder, full.names = TRUE)
+  output <- bplapply(leadersList, function(x, widths) {
+    widthsCage <- ORFik:::widthPerGroup(readRDS(i))
     diffWidths <- widths - widthsCage
     same <- sum(diffWidths == 0)
     bigger <- sum(diffWidths < 0)
@@ -163,12 +148,12 @@ getAllLeaderChanges <- function(outname = "/export/valenfs/projects/uORFome/lead
     meanDifBigger <- mean(diffWidths[diffWidths < 0])
     meanDifSmaller <- mean(diffWidths[diffWidths > 0])
     return(c(same,bigger,smaller,meanDifBigger,meanDifSmaller))
-  }
+  }, widths = widths)
+  output <- setDT(unlist(output, recursive = FALSE))
+
   dt <- as.data.table(matrix(output, ncol = 5))
   colnames(dt) <- c("same", "bigger", "smaller", "meanBigger", "meanSmaller")
-  stopCluster(cl)
-  setwd(dataBaseFolder)
-  save(dt,file = "leaderWidthChanges.rdata")
+  save(dt, file = "leaderWidthChanges.rdata")
 
   # as box plot per tissue, 1 box per, width change
   meanFiveWidth <- mean(widths)
@@ -198,12 +183,9 @@ getAllLeaderChanges <- function(outname = "/export/valenfs/projects/uORFome/lead
   setwd(dataBaseFolder)
   save(changes, file = "leaderWidthChangesPerLeader.rdata")
 
-  load("leaderWidthChangesPerLeader.rdata")
-
 
   tissue <- gsub(" ", ".", cageWeHave$Characteristics.Tissue.)
   uniqueTissues <- unique(tissue)
-  library(ORFik)
   getCDS()
   cdsLength <- widthPerGroup(firstExonPerGroup(cds[names(fiveUTRs)]), keep.names = F)
   c <- as.data.table(matrix(nrow = nrow(changes), ncol = 1))
@@ -256,24 +238,21 @@ getAllLeaderChanges <- function(outname = "/export/valenfs/projects/uORFome/lead
   plot(res)
 
 
-  library(cowplot)
-  plot_grid(cageAll, res ,align='hv',nrow=1,labels=c('A','B'))
+  #library(cowplot)
+  #plot_grid(,align='hv',nrow=1,labels=c('A','B'))
+  return(gridExtra::grid.arrange(cageAll, res, nrow = 1))
 }
 
-#' validate features using brain and hela to see that features
-#'  seperate them
-#'  using pca and quantiles
-validateAllFeatures <- function(){
+#' validate features using
+#' seperate them using pca and quantiles
+pcaCAGEValidation <- function(uids1, uids2) {
+  stop("not ready yet!")
   # goal: what is different between groups and within group
   # variance / aov
   # clustering, all features hclust(dists) , kmean, jaccard index
   # scale to normalize
   # which are important, pca, svd etc.
   # get uorf names , do for both, change standardCage
-  uids1 <- uidFromCage()
-
-  uids2 <- uidFromCage("./../DATA/CAGE/human/kidney%2c%20adult%2c%20pool1.CNhs10622.10017-101C8.hg38.nobarcode.ctss.bed.gz")
-
 
   # now merge, either all, or cross set
 
@@ -337,8 +316,6 @@ validateAllFeatures <- function(){
   }
 
   # make the pca, do the plots, make quantiles,
-  # find overlapping uorfs between quantile sets
-  # a way to find interesting uorfs
   pcaNames <- paste0("pca_",names[2:length(names)])
   for(i in pcaNames){
     pca <- get(i)
@@ -443,48 +420,4 @@ bestTeUorfsOnTxEffect <- function(){
   meanNumberWorst <- mean(numberOfUorfsPerTx$nUorfs[whichNames])
 
   # number of uORFs seem to correlate with TE of cds
-}
-
-distanceVsUorfTE <- function(){
-  uorfTEs <- readTable("teFiltered", with.IDs = T)
-
-  dists <- readTable("distORFCDS")
-
-  rowMeansUorfs <- rowMeans(uorfTEs[,3:ncol(uorfTEs)])
-  which <- rowMeansUorfs > 1
-  plot(dists$distORFCDS[which], rowMeansUorfs[which],
-       ylim = c(0.7,100), xlim = c(-1000,1000))
-  cor.test(dists$distORFCDS[which], rowMeansUorfs[which])
-  numberOfUorfsPerTx <- readTable("numberOfUorfsPerTx")
-  whichOne <- numberOfUorfsPerTx$nUorfs == 1
-  txToUse <- numberOfUorfsPerTx$txNames[whichOne]
-
-  matchedNames <- uorfTEs$txNames %in% txToUse
-
-  mean(rowMeansUorfs[matchedNames])
-
-
-  ### for cds te
-  cdsTEs <- readTable("cdsTeFiltered", with.IDs = T)
-  rowMeansCDS <- rowMeans(cdsTEs[,2:ncol(cdsTEs)])
-
-  mappingTxUorfs <- readTable("linkORFsToTx")$txNames
-  cdsDis <- dists$distORFCDS[]
-  names(rowMeansCDS) <- cdsTEs$txNames
-  rowMeansCDS <- rowMeansCDS[mappingTxUorfs]
-
-  which <- rowMeansCDS > 1
-  whichPos <- dists$distORFCDS > 0
-  usedDists <- dists$distORFCDS[which]
-  group = (usedDists<=0) + (usedDists<=200) + (usedDists <= 400) +(usedDists <= 600)
-  groups = factor(group,levels=0:4,labels=c("<0","<200","<400","<600", ">600"))
-  boxplot(rowMeansCDS[which]~groups)
-
-  boxplot(dists$distORFCDS[whichPos], rowMeansCDS[whichPos])
-
-  plot(dists$distORFCDS[whichPos], rowMeansCDS[whichPos],
-       ylim = c(0.7,100), xlim = c(-1000,1000),
-       lines(x = c(-185,-185), y = c(1,100)))
-
-
 }

@@ -4,12 +4,15 @@
 \alias{getORFsGoTerms}
 \title{Get Go terms}
 \usage{
-getORFsGoTerms(geneNames, organism = "Homo sapiens")
+getORFsGoTerms(geneNames, organism)
 }
 \arguments{
 \item{geneNames}{ensembl gene names}
 
-\item{organism}{scientifi name}
+\item{organism}{scientific name}
+}
+\value{
+a data.table of geneNames and go terms(2 columns)
 }
 \description{
 Get Go terms

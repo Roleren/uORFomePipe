@@ -4,7 +4,7 @@
 \alias{trainClassifier}
 \title{The training model with cds and 3' UTRs as random forest}
 \usage{
-trainClassifier(tissue = NULL, nthreads = 40, max_mem_size = "200G")
+trainClassifier(tissue = NULL, nthreads, max_mem_size)
 }
 \arguments{
 \item{tissue}{Tissues to train on, use all if you want all in one}

@@ -4,13 +4,15 @@
 \alias{getAllORFGeneSymbols}
 \title{Get gene symbols from ensemble gene names}
 \usage{
-getAllORFGeneSymbols(geneNames, dataset)
+getAllORFGeneSymbols(geneNames, dataset, biomart = "ensembl")
 }
 \arguments{
 \item{geneNames}{a character vector}
 
 \item{dataset}{default human: hsapiens_gene_ensembl,
 for zebrafish drerio_gene_ensembl, for yeast scerevisiae_gene_ensembl}
+
+\item{biomart}{default "ensembl"}
 }
 \value{
 a data.table of geneNames and symbols (2 columns)

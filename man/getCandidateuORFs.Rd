@@ -7,6 +7,7 @@
 getCandidateuORFs(
   folder = regionUORFsFolder,
   startCodons = "ATG|CTG|TTG|GTG|AAG|AGG|ACG|ATC|ATA|ATT",
+  stopCodons = "TAA|TAG|TGA",
   BPPARAM = bpparam()
 )
 }

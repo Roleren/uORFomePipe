@@ -32,6 +32,7 @@ getLeadersFromCage <- function(cageFiles, BPPARAM = bpparam()){
 #' @export
 getCandidateuORFs <- function(folder = regionUORFsFolder,
                               startCodons = "ATG|CTG|TTG|GTG|AAG|AGG|ACG|ATC|ATA|ATT",
+                              stopCodons = "TAA|TAG|TGA",
                               BPPARAM = bpparam()) {
   message("Searching for candidate uORFs")
   leadersList = list.files(folder, full.names = TRUE)
@@ -42,6 +43,7 @@ getCandidateuORFs <- function(folder = regionUORFsFolder,
     if (!file.exists(saveName)) {
       uORFomePipe:::getFasta()
       rangesOfuORFs <- findUORFs(readRDS(i), fa, startCodon = startCodons,
+                                 stopCodon = stopCodons,
                                  minimumLength = 0, longestORF = FALSE)
       rangesOfuORFs <- ORFik:::filterUORFs(rangesOfuORFs, get("cds", mode = "S4"))
       saveRDS(rangesOfuORFs, file = saveName)
@@ -87,7 +89,8 @@ createCatalogueDB <- function(df.cage,
 #'
 #' Step 5 of uORFome pipeline
 #' @export
-makeTrainingAndPredictionData <- function(df.rfp, df.rna, tissue, organism, biomart) {
+makeTrainingAndPredictionData <- function(df.rfp, df.rna, tissue, organism,
+                                          biomart = get("biomart_dataset", mode = "character", envir = .GlobalEnv)) {
   # first sequence features
   getSequenceFeatures(organism, biomart)
   # Ribo-seq features for ORFs

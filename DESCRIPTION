@@ -23,5 +23,6 @@ Imports:
   ggplot2,
   biomaRt,
   biomartr,
-  gridExtra
+  gridExtra,
+  VennDiagram
 RoxygenNote: 7.1.0

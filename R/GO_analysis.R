@@ -1,26 +1,12 @@
-#' Get indices of uORFs from genes
-#' @param hgncSymbol a character vector of gene symbols
-#' @return a integer vector of indices
-#' @importFrom biomaRt getBM
-#' @importFrom biomaRt useEnsembl
-getORFsGeneSymbols <- function(hgncSymbol = "ATF4", refTable = refTable){
-  ensembl <- useEnsembl(biomart="ensembl", dataset="hsapiens_gene_ensembl")
-  geneHits <- getBM(attributes = c('ensembl_gene_id', 'ensembl_transcript_id','hgnc_symbol'),
-                    filters = 'hgnc_symbol', values = hgncSymbol, mart = ensembl)
-  if(nrow(geneHits) == 0) stop(p("could not find any genes with the name: ", hgncSymbol))
-
-  return(which(refTable$geneNames == geneHits[1, 1]))
-}
-
 #' Get gene symbols from ensemble gene names
 #' @param geneNames a character vector
 #' @param dataset default human: hsapiens_gene_ensembl,
 #' for zebrafish drerio_gene_ensembl, for yeast scerevisiae_gene_ensembl
+#' @param biomart default "ensembl"
 #' @importFrom biomaRt getBM
 #' @importFrom biomaRt useEnsembl
 #' @return a data.table of geneNames and symbols (2 columns)
-getAllORFGeneSymbols <- function(geneNames, dataset){
-
+getAllORFGeneSymbols <- function(geneNames, dataset, biomart = "ensembl"){
   ensembl <- useEnsembl(biomart = "ensembl", dataset = dataset)
   uniqueGenes <- unique(geneNames)
   geneHits <- getBM(attributes = c('ensembl_gene_id', 'hgnc_symbol'),
@@ -31,9 +17,10 @@ getAllORFGeneSymbols <- function(geneNames, dataset){
 
 #' Get Go terms
 #' @param geneNames ensembl gene names
-#' @param organism scientifi name
+#' @param organism scientific name
 #' @importFrom biomartr getGO
-getORFsGoTerms <- function(geneNames, organism = "Homo sapiens"){
+#' @return a data.table of geneNames and go terms(2 columns)
+getORFsGoTerms <- function(geneNames, organism){
   old <- geneNames
   geneNames <- unique(geneNames)
   Go <- biomartr::getGO(organism = organism,
@@ -41,4 +28,34 @@ getORFsGoTerms <- function(geneNames, organism = "Homo sapiens"){
                         filters  = "ensembl_gene_id")
   desc <- Go$goslim_goa_description
   return(desc[data.table::chmatch(as.character(old), as.character(geneNames))])
+}
+
+#' Guess biomart from organism name
+#' @param organism scientific name
+#' @param biomart character, default "ensembl"
+#' @importFrom biomaRt getBM
+#' @importFrom biomaRt useEnsembl
+#' @return a character with dataset used
+getBiomartFromOrganism <- function(organism, biomart="ensembl") {
+  ensembl = useEnsembl(biomart = biomart)
+  a <- listDatasets(ensembl)
+  guess <- a[grep(pattern = p(unlist(strsplit(organism, " ")), collapse = "|"),
+       x = a$dataset, value = FALSE, ignore.case = TRUE),][, 1:2]
+  if (nrow(guess) == 0) {
+    message(p("Did not find biomart candidate for organism", organism))
+    message("Set the 'dataset' argument in orfikDirs(dataset = ) from this list:")
+    print(a)
+    stop()
+  }
+  if (nrow(guess) > 1) {
+    message(p("Found multiple biomart candidates for organism", organism))
+    message("Possibilities were")
+    print(guess)
+    message("Set the 'dataset' argument in orfikDirs(dataset = ) to correct choice this list:")
+    print(a)
+    stop()
+  }
+
+  message(p("Using biomart dataset: ", guess$dataset))
+  return(guess$dataset)
 }

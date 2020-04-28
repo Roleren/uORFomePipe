@@ -5,34 +5,33 @@
 #' Neg seg is by 3'utrs
 #'
 #' @param tissues Tissues to train on, use all if you want all in one
-#' @param nthreads_h2o number of cores for H20: default (40)
-#' @param nthreads_pred number of cores for R: default (12)
+#' @param nthreads_h2o number of cores for H20: default max(45, detectCores()/3)
 #' @param max_mem_size max allowed memory for H20: default ("200G")
 #' @export
 #' @import h2o
-predictUorfs <- function(tissues, nthreads_h2o = 40, max_mem_size = "200G") {
+predictUorfs <- function(tissues, nthreads_h2o = max(45, detectCores()/3),
+                         max_mem_size = "200G") {
   for (tissue in tissues) {
-    message(paste("Prediction for tissue:", tissue))
+    message(p("Prediction for tissue: ", tissue))
     # make uORFTable
     if(file.exists(paste0("prediction_model/prediction_", tissue, ".rds"))) {
       prediction <- readRDS(paste0("prediction_model/prediction_", tissue, ".rds"))
     } else {
-      forestRibo <- uORFomePipe:::trainClassifier(tissue = tissue,
-                                                  nthreads = nthreads_h2o,  max_mem_size = max_mem_size)
-      uorfTable <- uORFomePipe:::makeORFPredictionData()
-
-      prediction <- as.data.table(h2o.predict(forestRibo,  as.h2o(uorfTable)))
+      forestRibo <- uORFomePipe:::trainClassifier(tissue, nthreads_h2o, max_mem_size)
+      prediction <- as.data.table(h2o.predict(forestRibo,
+                                              as.h2o(uORFomePipe:::makeORFPredictionData())))
       hits <- as.logical(prediction[,3] > 0.50)
       uORFomePipe:::startCodonMetrics(hits)
       saveRDS(prediction, file = p("prediction_model/prediction_", tissue, ".rds"))
     }
   }
+  # TODO: output bed12 with colors
   return(makeCombinedPrediction(tissues))
 }
 
 #' The training model with cds and 3' UTRs as random forest
 #' @param tissue Tissues to train on, use all if you want all in one
-trainClassifier <- function(tissue = NULL, nthreads = 40,  max_mem_size = "200G") {
+trainClassifier <- function(tissue = NULL, nthreads, max_mem_size) {
 
   if(file.exists(paste0("prediction_model/randomForrest_",tissue))) {
     forrest <- h2o.loadModel(path = p("prediction_model/randomForrest_",tissue,"/",
