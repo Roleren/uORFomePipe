@@ -45,7 +45,7 @@ getSequenceFeatures <- function(organism, biomart) {
 
   # Gene information
   # Gene to symbol
-  insertTable(uORFomePipe:::getAllORFGeneSymbols(dt$geneNames, biomart), "geneSymbols")
+  insertTable(getAllORFGeneSymbols(dt$geneNames, biomart), "geneSymbols")
 
   # exon-exon junctions
   eej <- numExonsPerGroup(fiveUTRs, TRUE)

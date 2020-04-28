@@ -23,6 +23,5 @@ Imports:
   ggplot2,
   biomaRt,
   biomartr,
-  clusterProfiler,
   gridExtra
 RoxygenNote: 7.1.0

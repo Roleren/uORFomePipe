@@ -29,18 +29,6 @@ getAllORFGeneSymbols <- function(geneNames, dataset){
   return(data.table(geneNames = geneNames, symbol = geneHits$hgnc_symbol[group2]))
 }
 
-#' Get egene symbols from Ensembl gene names
-#' @param geneNames character vector of gene names
-#' @importFrom clusterProfiler bitr
-geneSymbolsTo <- function(geneNames, org.db = org.Dr.eg.db) {
-  geneNames <- as.character(geneNames)
-
-  uniqueGenes <- unique(geneNames)
-  geneHits <- bitr(uniqueGenes, fromType = "ENSEMBL", toType = "SYMBOL", OrgDb = org.Dr.eg.db)
-  group2 <- data.table::chmatch(geneNames, geneHits$ENSEMBL)
-  return(data.table(symbol = geneHits$SYMBOL[group2]))
-}
-
 #' Get Go terms
 #' @param geneNames ensembl gene names
 #' @param organism scientifi name
@@ -53,18 +41,4 @@ getORFsGoTerms <- function(geneNames, organism = "Homo sapiens"){
                         filters  = "ensembl_gene_id")
   desc <- Go$goslim_goa_description
   return(desc[data.table::chmatch(as.character(old), as.character(geneNames))])
-}
-
-#' Check if any uORFs is found in specific gene
-ORFsInGeneMetrics <- function(hgncSymbol = "ATF4", finalCagePred = readTable("finalCAGEuORFPrediction")){
-  hits <- getORFsGeneSymbols(hgncSymbol = hgncSymbol, refTable = refTable)
-  print(paste("found ", sum(finalCagePred[hits]), "/", length(hits),
-              "predicted translated uorfs in", hgncSymbol))
-  if(sum(finalCagePred[hits]) == 0) return(NULL)
-  hits <- hits[finalCagePred[hits]]
-  print(uorfData$distORFCDS[hits])
-  print(as.character(uorfData$StartCodons[hits]))
-  print(uorfData$lengths[hits])
-  print(uorfData$rankInTx[hits])
-  return(hits)
 }

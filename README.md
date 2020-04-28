@@ -1,4 +1,4 @@
-ORFik: R package for prediction and analysis of uORFs
+uORFomePipe: R package for prediction and analysis of uORFs
 ==============================================================================
 
 This package is still under development, although this version is stable and can be used.
@@ -34,6 +34,7 @@ if (requireNamespace("devtools")) {
 ```  
 
 #### More information
+Here we show an example of predicting active uORFs between 3 stages in zebrafish
 
 After installation run:
 ```r
@@ -46,15 +47,15 @@ if (0) { # Do this only once!
   # CAGE
   create.experimentl(dir = "/export/valenfs/data/processed_data/CAGE/nepal_2013_zebrafish/final_results/aligned_GRCz10", exper = "zf_nepal")
   df.cage <- read.experimentl("zf_nepal")
-  ORFik:::simpleLibs(df.cage, addScoreColumn = TRUE, addSizeColumn = FALSE, method = "5prime"); remove.experiments(df.cage)
+  simpleLibs(df.cage, addScoreColumn = TRUE, addSizeColumn = FALSE, method = "5prime"); remove.experiments(df.cage)
   # RFP
   create.experimentl(dir = "/export/valenfs/data/processed_data/Ribo-seq/chew_2013_zebrafish/final_results/aligned_GRCz10/", exper = "zf_Chew13", type = "bam")
   df.rfp <- read.experimentl("zf_Chew13")
-  ORFik:::shiftFootprintsByExperiment(df.rfp, output_format = "bedo", accepted.lengths = 25:30)
+  shiftFootprintsByExperiment(df.rfp, output_format = "bedo", accepted.lengths = 25:30)
   # RNA
   create.experimentl(dir = "/export/valenfs/data/processed_data/RNA-seq/chew_2013_and_pauli_2012_zebrafish/final_results/aligned_GRCz10/sorted", exper = "zf_Chew_RNA")
   df.rna <- read.experimentl("zf_Chew_RNA")
-  ORFik:::simpleLibs(df.rna, addScoreColumn = TRUE, addSizeColumn = FALSE); remove.experiments(df.rna)
+  simpleLibs(df.rna, addScoreColumn = TRUE, addSizeColumn = FALSE); remove.experiments(df.rna)
 }
 #¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
 # INIT (START HERE)
