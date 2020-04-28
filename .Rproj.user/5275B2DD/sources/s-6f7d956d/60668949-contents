@@ -1,0 +1,23 @@
+#' shortcut for paste0()
+#' @export
+p <- paste0
+
+#' remove non finite in data.table
+#'
+#' Removes inf, NA, and NaN values
+#' @param DT a data.table
+#' @param replacement (0) what should the non finite values be changed to ?
+removeNonFinite <- function(DT, replacement = 0){
+  invisible(lapply(names(DT),function(.name)
+    set(DT, which(!is.finite(DT[[.name]])), j = .name, value = replacement)))
+  return(DT)
+}
+
+#' Update ORFik version
+#' @param branch default: "master"
+#' @param user default: Roleren
+#' @export
+updateORFik <- function(branch = "master", user = "Roleren")  {
+  system(p("rm -r ", .libPaths()[1], "/00LOCK-ORFik"))
+  devtools::install_github(paste0(user, "/ORFik"), ref = branch)
+}

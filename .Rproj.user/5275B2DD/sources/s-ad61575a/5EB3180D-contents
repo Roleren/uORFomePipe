@@ -1,0 +1,104 @@
+#' Init uORFome
+#'
+#' Make directoy structure for orf finding
+#' The main Path is ./.. relative to RCode1/ location
+#' @param mainPath folder for uORFome to put results
+#' @param dataFolder ORFik experiment that contains Annotation
+#' @param makeDatabase default FALSE, set to TRUE if you want
+#' to predict translated uORFs
+#' @param force.remake logical (default: FALSE), force all folders to be remade.
+#' Will not delete existing folders
+#' @export
+orfikDirs <- function(mainPath, experiment, makeDatabase = TRUE,
+                      force.remake = FALSE){
+  setwd(mainPath)
+  if (dir.exists("dataBase/forests/predicateTables") & !force.remake) {
+    message("Initializing premade uORFome")
+    return(invisible(NULL))
+  }
+
+  message("Welcome, setting up uORFome folders")
+  message(paste("main path for project will be: ", mainPath))
+  resultsFolder <- p(mainPath, "/results")
+  resultsLoc <- resultsFolder
+  if (!dir.exists(resultsLoc)) dir.create(resultsLoc)
+
+  dir.create(p(resultsLoc,"/New_Cage_Leaders"))
+  dir.create(p(resultsLoc,"/regionUORFs"))
+  dir.create(p(resultsLoc,"/rangesOfUORFs"))
+  dir.create(p(resultsLoc,"/fasta"))
+  dir.create(p(resultsLoc,"/uorfIDs"))
+
+  if (makeDatabase) {
+    dir.create("dataBase")
+    dir.create("dataBase/forests/")
+    dir.create("dataBase/forests/predicateTables")
+    dataBaseFolder <- p(mainPath,"/dataBase")
+    assign("dataBaseFolder", dataBaseFolder, envir = .GlobalEnv)
+  }
+
+  print("directories created successfully")
+
+  # Set up remaining Global variables
+  regionUORFsFolder = p(resultsFolder,"/regionUORFs/")
+  leadersFolder = p(resultsFolder,"/New_Cage_Leaders/")
+  fastaFolder = p(resultsFolder,"/fasta/")
+  uorfFolder = p(resultsFolder,"/rangesOfUORFs/")
+  idFolder = p(resultsFolder,"/uorfIDs/")
+  plottingFolder = p(resultsFolder,"/Plotting/Single_result_Plots/")
+  assign("regionUORFsFolder", regionUORFsFolder, envir = .GlobalEnv)
+  assign("leadersFolder", leadersFolder, envir = .GlobalEnv)
+  assign("fastaFolder", fastaFolder, envir = .GlobalEnv)
+  assign("uorfFolder", uorfFolder, envir = .GlobalEnv)
+  assign("idFolder", idFolder, envir = .GlobalEnv)
+  assign("plottingFolder", plottingFolder, envir = .GlobalEnv)
+
+
+  assign("mainFolder", mainPath, envir = .GlobalEnv)
+  assign("resultsFolder", resultsFolder, envir = .GlobalEnv)
+
+  # Data helper folder
+  dataFolder <- p(mainPath, "/helper_files")
+  dir.create(dataFolder)
+  # now validate all that directories exist
+  if(!all(dir.exists(c(resultsFolder, dataFolder)))){
+    stop(p("Could not find directory: ", c(resultsFolder, dataFolder)[!file.exists(c(resultsFolder, dataFolder))]))
+  }
+
+  # Create easier helperlibraries for annotation
+  # Set up annotation
+  gtfdb = df.rfp@txdb
+  txdb <- NULL
+  if (!file.exists(p(dataFolder, "/threeUTRs.rdata"))) {
+    f <- file_ext(gtfdb)
+    if (f == "gff" | f == "gff2" | f == "gff3" | f == "gtf") {
+      if (!file.exists(p(gtfdb, ".db")) | !file.exists(p(gtfdb, "sqlite"))) {
+        txdb <- GenomicFeatures::makeTxDbFromGFF(gtfdb)
+        saveDb(txdb, file = p(dataFolder, "/Gtf.db"))
+        txdb <- loadTxdb(p(dataFolder, "/Gtf.db"))
+      } else {
+        if (file.exists(p(gtfdb, ".db"))) {
+          gtfdb <- p(gtfdb, ".db")
+          txdb <- loadTxdb(gtfdb)
+        } else {
+          gtfdb <- p(gtfdb, ".sqlite")
+          txdb <- loadTxdb(gtfdb)
+        }
+      }
+    } else if(f == "db" | f == "sqlite") {
+      txdb <- loadDb(gtfdb)
+    } else stop("when txdb is path, must be one of .gff, .gtf and .db")
+    loadRegions(txdb, c("tx", "cds", "fiveUTRs", "threeUTRs"), )
+    save(tx, file = p(dataFolder, "/tx.rdata"))
+    save(cds, file = p(dataFolder, "/cds.rdata"))
+    save(fiveUTRs, file = p(dataFolder, "/fiveUTRs.rdata"))
+    save(threeUTRs, file = p(dataFolder, "/threeUTRs.rdata"))
+    rm(list = c("tx", "cds", "fiveUTRs", "threeUTRs"), envir = ".GlobalEnv")
+  } else txdb <- loadTxdb(gtfdb)
+
+  assign("faiName", experiment@fafile, envir = .GlobalEnv)
+  gtfdb <- ifelse(is.null(txdb), gtfdb, txdb$conn@dbname)
+  assign("gtfdb", gtfdb, envir = .GlobalEnv)
+
+  return(invisible(NULL))
+}

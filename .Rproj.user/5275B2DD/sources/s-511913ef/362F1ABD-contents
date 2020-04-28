@@ -1,0 +1,266 @@
+#' Get CDS and 3'UTR TrainingData of ribo seq features
+#'
+#' Positive set is cds, negative is downstream region of 3' UTRs
+#' @param tissue Tissue to train on, use "all" if you want all in one
+makeTrainingData <- function(tissue,
+  features = c("countRFP", "disengagementScores", "entropyRFP", "startRegionCoverage","startRegionRelative",
+               "floss", "ioScore", "ORFScores","fpkmRFP", "RRS", "RSS", "startCodonCoverage")) {
+
+  if (file.exists(paste0("forests/TrainingData/TrainingData_",tissue,".rds"))) {
+    return(readRDS(paste0("forests/TrainingData/TrainingData_",tissue,".rds")))
+  }
+  posFeatureNames <- grep(pattern = "cds", x = listTables(), value = T)
+  negFeatureNames <- grep(pattern = "three", x = listTables(), value = T)
+  if (length(posFeatureNames) != length(negFeatureNames)) stop("Not equal length of pos and neg feature names")
+
+  pos <-bplapply(posFeatureNames, function(x, tissue) {
+    uORFomePipe:::getTissueFromFeatureTable(x, tissue = tissue)
+  }, tissue = tissue); pos <- setDT(unlist(pos, recursive = FALSE))
+
+  neg <-bplapply(negFeatureNames, function(x) {
+    getTissueFromFeatureTable(tableName = x, tissue = tissue)
+  }); neg <- setDT(unlist(neg, recursive = FALSE))
+
+  # Filter out translating 3' UTRs
+  filterThree <- (((neg[,1] < quantile(neg[,1], 0.95)) |
+                     (neg[,12] < quantile(neg[,12], 0.981))) | neg[,5] < 1.1)
+  # Filter out not needed columns of CDS
+  filterCDS <- validByRibo(pos[,1], pos[,9], pos[,12], pos[,5])
+
+  negR <- data.table(rbind(pos[!filterCDS, ], neg[filterThree, ])) # add bad cds to neg
+  pos <- data.table(rbind(neg[!filterThree, ], pos[filterCDS, ]))  #!!! UPDATE if new features
+  neg <- negR
+
+  training <- data.table(rbind(pos, neg))
+  colnames(training) <- features
+
+  training <- fixNAandINFTable(training)
+  y <- as.factor(c(rep(1, nrow(pos)), rep(0, nrow(neg))))
+  training <- data.table(y, training)
+
+  dCDSThree <- getBestIsoformStartCodonCoverage(cdsAndThree = T)
+  pos <- dCDSThree[[1]]
+  neg <- dCDSThree[[2]]
+  negR <- data.table(rbind(pos[!filterCDS, ], neg[filterThree, ]))      # add bad cds to neg
+  pos <- data.table(rbind(neg[!filterThree, ], pos[filterCDS, ]))  #!!! UPDATE if new features
+  neg <- negR
+
+  dCDSThree <- data.table(rbind(pos, neg))
+  dCDSThree <- dCDSThree[readHits >= quantile(dCDSThree$readHits, 0.849),]
+  dInts <- dCDSThree[dCDSThree[, .I[readHits == max(readHits)], by=group]$V1]
+  ints <- c(length(filterCDS) + which(!filterThree),
+            which(filterCDS),
+            which(!filterCDS),
+            length(filterCDS) + which(filterThree))
+  if (length(ints) != nrow(training)) stop("wrong making of ints!")
+  training$startCodonPerGroupBest <- ints %in% dInts$index
+  #analysis
+  print(cor(data.matrix(training), use = "complete.obs"))
+
+  saveRDS(training, file = paste0("forests/TrainingData/TrainingData_",tissue,".rds"))
+  return(training)
+}
+
+#' Predict table for uORFs
+#'
+#' Get ribo-seq features for uORFs
+makeORFPredictionData <- function(tissue = "all",
+   features = c("countRFP", "disengagementScores", "entropyRFP", "startRegionCoverage","startRegionRelative",
+                "floss", "ioScore", "ORFScores","fpkmRFP", "RRS", "RSS", "startCodonCoverage")) {
+  if(file.exists(paste0("forests/TrainingData/PredictionData_",tissue,".rds"))) {
+    return(readRDS(paste0("forests/TrainingData/PredictionData_",tissue,".rds")))
+  }
+
+  pos <-bplapply(features, function(x) {
+    uORFomePipe:::getTissueFromFeatureTable(tableName = x, tissue = tissue)
+  }); pos <- setDT(unlist(pos, recursive = FALSE))
+  colnames(pos) <- features
+  predictors <- fixNAandINFTable(pos)
+  # Here is lines with filter
+  # filter on isoforms
+  d <- getBestIsoformStartCodonCoverage()
+  # combine filter with ribo-seq prediction
+  d <- d[readHits > quantile(d$readHits, 0.973),]
+  d <- d[d[, .I[readHits == max(readHits)], by=group]$V1]
+  predictors$startCodonPerGroupBest <- seq.int(1, nrow(predictors)) %in% d$index
+  print(cor(data.matrix(predictors), use = "complete.obs"))
+  saveRDS(predictors, file = paste0("forests/predicateTables/PredictionData_",tissue,".rdata"))
+  return(predictors)
+}
+
+#' Get all sequence features for ORFs
+#'
+#' Extracted from the data base
+getAllSequenceFeaturesTable <- function() {
+  fread(uorfData, file = "forests/uORFSequenceFeatures.csv", header = TRUE)
+}
+
+fixNAandINFTable <- function(predicate){
+  if(!all((c("RSS", "entropyRFP") %in% colnames(predicate))))
+    stop("predicate did not contain names RSS and entropyRFP")
+
+  isNA <- is.na(predicate[,"RSS"])[,1] #RSS
+  predicate <- as.matrix(predicate)
+  isINF <- is.infinite(predicate[, "entropyRFP"])
+  predicate[isNA, "RSS"] <- 0
+  predicate[isINF, "entropyRFP"] <- 0
+  return(as.data.table(predicate))
+}
+
+#' A filter per stop codon group
+#' Uses 3 large ribo-seq libraries for ribo-seq validation
+#' get start for each in group, count overlaps, return orf with
+#' highest per group
+getBestIsoformStartCodonCoverage <- function(cdsAndThree = F) {
+  # reduce isoform overlaps by highest start codon reads per group
+  if (cdsAndThree) {
+    if(file.exists(paste0("forests/bestStartCodonsCDSTHREE.rdata"))) {
+      load(paste0("forests/bestStartCodonsCDSTHREE.rdata"))
+      return(dCDSThree)
+    }
+    if(is.null(filterCDS) | is.null(filterThree)) stop("filterCDS or filterThree is null!")
+
+    g <- getCDS(assignIt = F)
+    sg <- stopCodons(g, is.sorted = T)
+    uo <- uniqueOrder(sg) # <- grouping
+    counts <- rowMeans(readTable("cdsstartCodonCoverage"))
+    dCDS <- data.table(readHits = counts, group = uo, index = seq.int(length(uo)))
+
+    getThreeUTRs()
+    threeUTRs <- threeUTRs[widthPerGroup(threeUTRs) > 5]
+    sg <- stopCodons(threeUTRs, is.sorted = T)
+    uo <- uniqueOrder(sg) # <- grouping
+    counts <- rowMeans(readTable("threestartCodonCoverage")) # already at correct length
+    dThree <- data.table(readHits = counts, group = uo, index = seq.int(length(uo)))
+    dThree$group <- dThree$group + max(dCDS$group)
+    dThree$index <- dThree$index + max(dCDS$index)
+    dCDSThree <- list(dCDS, dThree)
+    save(dCDSThree, file = paste0("forests/bestStartCodonsCDSTHREE.rdata"))
+    return(dCDSThree)
+  }
+  if(file.exists(paste0("forests/bestStartCodons.rdata"))) {
+    load(paste0("forests/bestStartCodons.rdata"))
+    return(d)
+  }
+  uo <- readTable("stopCodonGrouping")$stopCodonGrouping
+
+  counts <- rowMeans(readTable("startCodonCoverage", with.IDs = F))
+  d <- data.table(readHits = counts, group = uo, index = seq.int(length(uo)))
+  save(d, file = paste0("forests/bestStartCodons.rdata"))
+  return(d)
+}
+
+#' Train h2o rf model.
+#' negDT if you want own samples for that
+forest <- function(dt, cv = 10, ntrees = 64, nthreads = 40,  max_mem_size = "200G"){
+  library(h2o)
+  h2o.init(nthreads = nthreads, max_mem_size = max_mem_size, port = 20050)
+  # new h2o model training
+  indices <- sample(1:nrow(dt), 0.6*nrow(dt), replace = F)
+  validationIndices <- seq.int(nrow(dt))[-indices]
+  trainingFrame <-  as.h2o(dt[indices, ])
+  validationFrame <- as.h2o(dt[validationIndices,])
+  forestH2o <- h2o.randomForest(y = "y", training_frame = trainingFrame,
+                                validation_frame = validationFrame,
+                                nfolds = cv, ntrees = ntrees)
+  print(data.table(feature = forestH2o@model$variable_importances[,1],
+                   round(forestH2o@model$variable_importances[,3:4], 2)))
+  print(data.frame(name = rownames(forestH2o@model$cross_validation_metrics_summary)[c(1,17,19)],
+                   score = round(as.double(forestH2o@model$cross_validation_metrics_summary[c(1,17,19),1]),
+                                 2)))
+  return(forestH2o)
+}
+
+
+
+#' Combine classifier and CAGE data, for final prediction table
+#'
+makeCombinedPrediction <- function(tissue) {
+  # load data
+  load(paste0("forests/finalPrediction_filtered",tissue, ".rdata"))
+  load(paste0(dataBaseFolder,"/tissueAtlas.rdata"))
+
+  some <- prediction$predict == 1 # set value
+
+  cageTissuesPrediction <- copy(tissueAtlas)
+  for(i in colnames(cageTissuesPrediction)[-1]) {
+    cageTissuesPrediction[, paste(i) := (tissueAtlas[,i, with=F] & some)]
+  }
+  insertTable(cageTissuesPrediction, "tissueAtlasByCageAndPred", rmOld = T)
+
+  # sums <- colSums(cageTissuesPrediction)
+  # cageTissuesPrediction[, names(which(sums == 0)) := NULL]
+
+  finalCagePred <- rowSums(cageTissuesPrediction[,-1]) > 0
+  insertTable(finalCagePred, "finalCAGEuORFPrediction", rmOld = T)
+
+  startCodonMetrics(finalCagePred)
+}
+
+validByRibo <- function(coverage, fpkm, startCodonCoverage, fiveRegionRelative) {
+  filter <- (coverage > min(quantile(coverage, 0.25), 10)) & (fpkm > quantile(fpkm, 0.15)) &
+    (startCodonCoverage > quantile(startCodonCoverage, 0.75)) & fiveRegionRelative > 0.95
+  return(filter)
+}
+
+# Get only specific tissues, or all.
+# Grouped by rowMeans
+getTissueFromFeatureTable <- function(tableName, tissue) {
+  if (tableNotExists(tableName)) stop(paste("table does not exist:",
+                                            tableName))
+  riboTable <- readTable(tableName, with.IDs = FALSE)
+  if (is.null(tissue) | (tissue == "all")) {
+    print("Grouping all together")
+  } else if ((tissue %in% as.character(unique(rpfSamples$tissue)))){
+    indices <- rpfSamples$tissue == tissue
+    riboTable <- riboTable[,indices, with = F]
+  } else stop("tissue does not exist in db")
+  return(rowMeans(riboTable))
+}
+
+filterHardOnes <- function(prediction, tissue = "all"){
+  prediction$filtered <- rep(F, nrow(prediction))
+  uorfTable <- makeUORFPredicateTable()
+  uorfData <- getAllSequenceFeaturesTable()
+  grl <- getUorfsInDb()
+  getCDS()
+  getCageTx()
+  getFasta()
+  table <- startCodonMetrics(as.logical(prediction[,3] >= 0.50))
+  badStarts <- table[,1] > 0 & table[,2] < 0
+  badStartCodons <- rownames(table)[badStarts]
+  goodStartCodons <- paste(rownames(table)[!badStarts], collapse = "|")
+  goodUORFs <- grl[uorfData$StartCodons %in%  rownames(table)[!badStarts]]
+  res = c()
+  for(codon in badStartCodons) {
+    # find region
+    agg <- uorfData$StartCodons == codon & prediction[,3] >= 0.75
+    starts <- startSites(grl[agg], T, T, T)
+    # make string
+    hits <- grep(x = ORFik:::startRegionString(grl[agg], tx, fa, 6, 9), pattern = goodStartCodons)
+    hitsUp <- grep(x = ORFik:::startRegionString(grl[agg], tx, fa, 5, 0), pattern = stopDefinition(1))
+    hitsOverlapsBetter <- starts %over% goodUORFs
+    hitsCDS <- to(findOverlaps(startSites(cds, T, T, T), starts, maxgap = 3))
+    valid <- (!(seq.int(1,sum(agg)) %in% c(hits, hitsUp, hitsOverlapsBetter, hitsCDS)))
+
+    # find indices
+    notBestStart <- (uorfTable$startCodonPerGroupBest == F)[agg]
+    index <- which((!notBestStart & valid))
+    toKeep <- which(agg)[index]
+    res <- c(res, toKeep)
+  }
+  if(length(res) != length(unique(res))) stop("error in res creation!")
+  hits <- (grep(x = uorfData$StartCodons, pattern = paste(badStartCodons, collapse = "|")))
+
+  prediction$predict[hits] <- 0
+  prediction$p0[hits] <- 1
+  prediction$p1[hits] <- 0
+  prediction$filtered[hits] <- T
+
+  prediction$predict[res] <- 1
+  prediction$p0[res] <- 0
+  prediction$p1[res] <- 1
+  startCodonMetrics(as.logical(prediction[,3] >= 0.50))
+  save(prediction, file = paste0("forests/finalPrediction_filtered",tissue, ".rdata"))
+  return(prediction)
+}

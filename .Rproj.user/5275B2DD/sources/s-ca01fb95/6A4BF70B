@@ -1,0 +1,25 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1587580933675.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "6A4BF70B",
+    "lastKnownWriteTime" : 1587578732,
+    "last_content_update" : 1587578732,
+    "path" : "/export/valenfs/projects/uORFome/RCode1/uORFomePipe/R/features.R",
+    "project_path" : "R/features.R",
+    "properties" : {
+        "cursorPosition" : "85,47",
+        "scrollLine" : "0"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 4,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

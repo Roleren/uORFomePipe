@@ -1,0 +1,25 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1587829004712.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "CD77C225",
+    "lastKnownWriteTime" : 1587829311,
+    "last_content_update" : 1587829311690,
+    "path" : "/export/valenfs/projects/uORFome/RCode1/uORFomePipe/R/PipelineParts.R",
+    "project_path" : "R/PipelineParts.R",
+    "properties" : {
+        "cursorPosition" : "71,11",
+        "scrollLine" : "64"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 5,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

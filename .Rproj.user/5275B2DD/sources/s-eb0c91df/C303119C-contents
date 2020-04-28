@@ -1,0 +1,71 @@
+#' Init uORFome
+#'
+#' Make directoy structure for orf finding
+#' The main Path is ./.. relative to RCode1/ location
+#' @param mainPath folder for uORFome to put results
+#' @param dataFolder ORFik experiment that contains Annotation
+#' @param makeDatabase default FALSE, set to TRUE if you want
+#' to predict translated uORFs
+#' @param mainPath directory for uORFome
+#' @export
+orfikDirs <- function(mainPath, experiment, makeDatabase = TRUE){
+  setwd(mainPath)
+  if (dir.exists("dataBase/forests/predicateTables")) {
+    message("Initializing premade uORFome")
+    return(invisible(NULL))
+  }
+
+  message("Welcome, setting up uORFome folders")
+  message(paste("main path for project will be: ", mainPath))
+  resultsFolder <- p(mainPath, "/results")
+  resultsLoc <- resultsFolder
+  if (!dir.exists(resultsLoc)) dir.create(resultsLoc)
+
+  dir.create(p(resultsLoc,"/New_Cage_Leaders"))
+  dir.create(p(resultsLoc,"/regionUORFs"))
+  dir.create(p(resultsLoc,"/rangesOfUORFs"))
+  dir.create(p(resultsLoc,"/fasta"))
+  dir.create(p(resultsLoc,"/uorfIDs"))
+
+  if (makeDatabase) {
+    dir.create("dataBase")
+    dir.create("dataBase/forests/")
+    dir.create("dataBase/forests/predicateTables")
+    dataBaseFolder <- p(mainFolder,"/dataBase")
+    assign("dataBaseFolder", dataBaseFolder, envir = .GlobalEnv)
+  }
+
+  print("directories created successfully")
+
+  # Set up annotation
+  faiName = p(dataFolder,"/Homo_sapiens.GRCh38.dna.primary_assembly.chr.fa")
+  gtfName = p(dataFolder,"/Homo_sapiens.GRCh38.79.chr.NO_PATCH.gtf")
+  gtfdb = p(dataFolder,"/Gtf.db")  ### a speed up for Gtf, remove if not used
+  assign("faiName", faiName, envir = .GlobalEnv)
+  assign("gtfName", gtfName, envir = .GlobalEnv)
+  assign("gtfdb", gtfdb, envir = .GlobalEnv)
+
+  # Set up remaining Global variables
+  regionUORFsFolder = p(resultsFolder,"/regionUORFs/")
+  leadersFolder = p(resultsFolder,"/New_Cage_Leaders/")
+  fastaFolder = p(resultsFolder,"/fasta/")
+  uorfFolder = p(resultsFolder,"/rangesOfUORFs/")
+  idFolder = p(resultsFolder,"/uorfIDs/")
+  plottingFolder = p(resultsFolder,"/Plotting/Single_result_Plots/")
+  assign("regionUORFsFolder", regionUORFsFolder, envir = .GlobalEnv)
+  assign("leadersFolder", leadersFolder, envir = .GlobalEnv)
+  assign("fastaFolder", fastaFolder, envir = .GlobalEnv)
+  assign("uorfFolder", uorfFolder, envir = .GlobalEnv)
+  assign("idFolder", idFolder, envir = .GlobalEnv)
+  assign("plottingFolder", plottingFolder, envir = .GlobalEnv)
+
+
+  assign("mainFolder", mainPath, envir = .GlobalEnv)
+  assign("resultsFolder", resultsFolder, envir = .GlobalEnv)
+  assign("dataFolder", dataFolder, envir = .GlobalEnv)
+
+  # now validate all that directories exist
+  if(!all(dir.exists(c(resultsFolder, dataFolder)))){
+    stop(p("Could not find directory: ", c(resultsFolder, dataFolder)[!file.exists(c(resultsFolder, dataFolder))]))
+  }
+}

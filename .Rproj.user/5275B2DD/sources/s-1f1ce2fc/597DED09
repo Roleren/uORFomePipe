@@ -1,0 +1,25 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1587392275288.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "597DED09",
+    "lastKnownWriteTime" : 1587659930,
+    "last_content_update" : 1587659930,
+    "path" : "/export/valenfs/projects/uORFome/RCode1/uORFomePipe/R/GenomicGetters.R",
+    "project_path" : "R/GenomicGetters.R",
+    "properties" : {
+        "cursorPosition" : "74,33",
+        "scrollLine" : "49"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 3,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

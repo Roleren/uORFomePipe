@@ -1,0 +1,25 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1587717716090.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "EC0D873F",
+    "lastKnownWriteTime" : 1587717928,
+    "last_content_update" : 1587717928506,
+    "path" : "/export/valenfs/projects/uORFome/RCode1/uORFomePipe/R/DataBaseAtlasFunctions.R",
+    "project_path" : "R/DataBaseAtlasFunctions.R",
+    "properties" : {
+        "cursorPosition" : "24,26",
+        "scrollLine" : "2"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 5,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

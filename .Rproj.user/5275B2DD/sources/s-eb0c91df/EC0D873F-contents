@@ -1,0 +1,27 @@
+#' Main function to fill uORF database
+#' @export
+createCatalogueDB <- function(df.cage,
+                              dataBaseFolder, idFolder, dataFolder,
+                              leadersFolder) {
+  uORFomePipe:::createUniqueIDs(idFolder) # IDs for uORFs
+  uORFomePipe:::createGRObjects(dataFolder, leadersFolder) # GRanges objects for all uORFs
+  uORFomePipe:::createUORFAtlas(idFolder, dataFolder) # Per CAGE reassigned tx annotation, does uORF exist ?
+  uORFomePipe:::getTissueTable(df.cage, dataFolder)  # Per CAGE tissue, does uORF exist ?
+}
+
+#' All features from sequence, Riboseq and RNAseq
+#' @export
+makeTrainingAndPredictionData <- function(df.rfp, df.rna, tissue, organism, biomart) {
+  # first sequence features
+  getSequenceFeatures(organism, biomart)
+  # ORF Ribo-seq features
+  getGeneralRiboFeatures(df.rfp, df.rna,
+                         grl = uORFomePipe:::getUorfsInDb())
+  # cds and 3' Ribo-seq features
+  getCDS()
+  getGeneralRiboFeatures(df.rfp, grl = cds, preName = "cds")
+  uORFomePipe:::getFeaturesThreeUTRs(df.rfp)
+
+  uORFomePipe:::makeTrainingData(tissue)
+  uORFomePipe:::makeORFPredictionData(tissue)
+}

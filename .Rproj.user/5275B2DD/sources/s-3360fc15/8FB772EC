@@ -1,0 +1,25 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1587762711976.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "8FB772EC",
+    "lastKnownWriteTime" : 1587763241,
+    "last_content_update" : 1587763241307,
+    "path" : "/export/valenfs/projects/uORFome/RCode1/uORFomePipe/R/ClassifierStats.R",
+    "project_path" : "R/ClassifierStats.R",
+    "properties" : {
+        "cursorPosition" : "129,10",
+        "scrollLine" : "116"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 7,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

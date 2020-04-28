@@ -1,0 +1,70 @@
+#' Get indices of uORFs from genes
+#' @param hgncSymbol a character vector of gene symbols
+#' @return a integer vector of indices
+#' @importFrom biomaRt getBM
+#' @importFrom biomaRt useEnsembl
+getORFsGeneSymbols <- function(hgncSymbol = "ATF4", refTable = refTable){
+  ensembl <- useEnsembl(biomart="ensembl", dataset="hsapiens_gene_ensembl")
+  geneHits <- getBM(attributes = c('ensembl_gene_id', 'ensembl_transcript_id','hgnc_symbol'),
+                    filters = 'hgnc_symbol', values = hgncSymbol, mart = ensembl)
+  if(nrow(geneHits) == 0) stop(p("could not find any genes with the name: ", hgncSymbol))
+
+  return(which(refTable$geneNames == geneHits[1, 1]))
+}
+
+#' Get gene symbols from ensemble gene names
+#' @param geneNames a character vector
+#' @param dataset default human: hsapiens_gene_ensembl,
+#' for zebrafish drerio_gene_ensembl, for yeast scerevisiae_gene_ensembl
+#' @importFrom biomaRt getBM
+#' @importFrom biomaRt useEnsembl
+#' @return a data.table of geneNames and symbols (2 columns)
+getAllORFGeneSymbols <- function(geneNames, dataset){
+
+  ensembl <- useEnsembl(biomart = "ensembl", dataset = dataset)
+  uniqueGenes <- unique(geneNames)
+  geneHits <- getBM(attributes = c('ensembl_gene_id', 'hgnc_symbol'),
+                    filters = 'ensembl_gene_id', values = uniqueGenes, mart = ensembl)
+  group2 <- data.table::chmatch(geneNames, geneHits$ensembl_gene_id)
+  return(data.table(geneNames = geneNames, symbol = geneHits$hgnc_symbol[group2]))
+}
+
+#' Get egene symbols from Ensembl gene names
+#' @param geneNames character vector of gene names
+#' @importFrom clusterProfiler bitr
+geneSymbolsTo <- function(geneNames, org.db = org.Dr.eg.db) {
+  geneNames <- as.character(geneNames)
+
+  uniqueGenes <- unique(geneNames)
+  geneHits <- bitr(uniqueGenes, fromType = "ENSEMBL", toType = "SYMBOL", OrgDb = org.Dr.eg.db)
+  group2 <- data.table::chmatch(geneNames, geneHits$ENSEMBL)
+  return(data.table(symbol = geneHits$SYMBOL[group2]))
+}
+
+#' Get Go terms
+#' @param geneNames ensembl gene names
+#' @param organism scientifi name
+#' @importFrom biomartr getGO
+getORFsGoTerms <- function(geneNames, organism = "Homo sapiens"){
+  old <- geneNames
+  geneNames <- unique(geneNames)
+  Go <- biomartr::getGO(organism = organism,
+                        genes    = geneNames,
+                        filters  = "ensembl_gene_id")
+  desc <- Go$goslim_goa_description
+  return(desc[data.table::chmatch(as.character(old), as.character(geneNames))])
+}
+
+#' Check if any uORFs is found in specific gene
+ORFsInGeneMetrics <- function(hgncSymbol = "ATF4", finalCagePred = readTable("finalCAGEuORFPrediction")){
+  hits <- getORFsGeneSymbols(hgncSymbol = hgncSymbol, refTable = refTable)
+  print(paste("found ", sum(finalCagePred[hits]), "/", length(hits),
+              "predicted translated uorfs in", hgncSymbol))
+  if(sum(finalCagePred[hits]) == 0) return(NULL)
+  hits <- hits[finalCagePred[hits]]
+  print(uorfData$distORFCDS[hits])
+  print(as.character(uorfData$StartCodons[hits]))
+  print(uorfData$lengths[hits])
+  print(uorfData$rankInTx[hits])
+  return(hits)
+}

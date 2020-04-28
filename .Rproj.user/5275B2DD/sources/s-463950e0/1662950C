@@ -1,0 +1,25 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1587405703079.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "1662950C",
+    "lastKnownWriteTime" : 1587764345,
+    "last_content_update" : 1587764346074,
+    "path" : "/export/valenfs/projects/uORFome/RCode1/uORFome/runPipeline_zebrafish.R",
+    "project_path" : null,
+    "properties" : {
+        "cursorPosition" : "103,10",
+        "scrollLine" : "80"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

@@ -1,0 +1,25 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1586855025622.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "4800FE2F",
+    "lastKnownWriteTime" : 1587726820,
+    "last_content_update" : 1587726820,
+    "path" : "/export/valenfs/projects/uORFome/RCode1/uORFomePipe/R/Init.R",
+    "project_path" : "R/Init.R",
+    "properties" : {
+        "cursorPosition" : "40,54",
+        "scrollLine" : "0"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 4,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

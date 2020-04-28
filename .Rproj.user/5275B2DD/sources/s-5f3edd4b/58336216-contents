@@ -1,0 +1,36 @@
+#' Init uORFome
+#'
+#' Make directoy structure for orf finding
+#' The main Path is ./.. relative to RCode1/ location
+#' @param mainPath folder for uORFome
+#' @param makeDatabase default FALSE, set to TRUE if you want
+#' to predict translated uORFs
+#' @param mainPath directory for uORFome
+#' @export
+orfikDirs <- function(mainPath, makeDatabase = TRUE){
+  setwd(mainPath)
+  if (dir.exists("dataBase/forests/predicateTables")) {
+    message("Initializing premade uORFome")
+    return(invisible(NULL))
+  }
+
+  message("Welcome, setting up uORFome folders")
+  message(paste("main path for project will be: ", mainPath))
+  resultsFolder <- p(mainPath, "/results")
+  resultsLoc <- resultsFolder
+  if (!dir.exists(resultsLoc)) dir.create(resultsLoc)
+
+  dir.create(p(resultsLoc,"/New_Cage_Leaders"))
+  dir.create(p(resultsLoc,"/regionUORFs"))
+  dir.create(p(resultsLoc,"/rangesOfUORFs"))
+  dir.create(p(resultsLoc,"/fasta"))
+  dir.create(p(resultsLoc,"/uorfIDs"))
+
+  if (makeDatabase) {
+    dir.create("dataBase")
+    dir.create("dataBase/forests/")
+    dir.create("dataBase/forests/predicateTables")
+  }
+
+  print("directories created successfully")
+}

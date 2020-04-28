@@ -1,0 +1,25 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1588019422928.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "711B019A",
+    "lastKnownWriteTime" : 1588021375,
+    "last_content_update" : 1588021375044,
+    "path" : "/export/valenfs/projects/uORFome/RCode1/uORFomePipe/R/DataBaseValidation.R",
+    "project_path" : "R/DataBaseValidation.R",
+    "properties" : {
+        "cursorPosition" : "57,14",
+        "scrollLine" : "49"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 6,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

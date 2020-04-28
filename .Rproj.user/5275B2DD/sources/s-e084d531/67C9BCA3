@@ -1,0 +1,24 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1587648803349.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "67C9BCA3",
+    "lastKnownWriteTime" : 8079535050837008442,
+    "last_content_update" : 1587648803349,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "context" : "package:uORFomePipe:::allLeadersSpanningLeader"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 4,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_code_browser"
+}

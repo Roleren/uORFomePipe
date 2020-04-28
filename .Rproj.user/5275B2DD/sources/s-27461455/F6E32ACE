@@ -1,0 +1,25 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1587719399098.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "F6E32ACE",
+    "lastKnownWriteTime" : 1587719739,
+    "last_content_update" : 1587719739770,
+    "path" : "/export/valenfs/projects/uORFome/RCode1/uORFomePipe/R/ClassifierHelpers.R",
+    "project_path" : "R/ClassifierHelpers.R",
+    "properties" : {
+        "cursorPosition" : "73,23",
+        "scrollLine" : "64"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 5,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

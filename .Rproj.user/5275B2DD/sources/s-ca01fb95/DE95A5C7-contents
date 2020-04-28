@@ -1,0 +1,127 @@
+#' Reassign leaders by CAGE
+#'
+#' Step 1 of uORFome pipeline
+#' @param cageFiles a ORFik experiment with CAGE files and annotation
+#' @return uORFs search region (CAGE leaders + CDS)
+#' @export
+getLeadersFromCage <- function(cageFiles){
+  message("Starting to find uORF search spaces")
+  if (is(cageFiles, "experiment")) cageFiles <- filepath(cageFiles, "bedo")
+
+  bplapply(cageFiles, FUN = function(i, dataFolder, leadersFolder, regionUORFsFolder) {
+    getLeaders(cageName = i, assignLeader = FALSE , exportUorfRegions = T)
+    print("ok")
+  }, dataFolder = get("dataFolder", envir = .GlobalEnv),
+  leadersFolder = get("leadersFolder", envir = .GlobalEnv),
+  regionUORFsFolder = get("regionUORFsFolder", envir = .GlobalEnv))
+}
+
+#' Find uORFs from new leader regions
+#'
+#' Step 2 of uORFome pipeline
+#' @export
+getUorfsFromLeaders <- function(folder = regionUORFsFolder,
+                                   startCodons = "ATG|CTG|TTG|GTG|AAG|AGG|ACG|ATC|ATA|ATT") {
+  message("Searching for uORFs")
+  leadersList = list.files(folder)
+  nLeadersList = length(leadersList)
+  if (nLeadersList == 0) stop("No files in input folder!")
+  bplapply(1:nLeadersList, function(i) {
+    saveName = p(uorfFolder, gsub(pattern = "regionUORF.rdata", replacement = "uorf.rdata",
+                                  x = leadersList[i]))
+    if (!file.exists(saveName)) {
+      load(p(folder, leadersList[i]))
+      uORFomePipe:::getFasta()
+      uORFomePipe:::getCDS()
+      rangesOfuORFs <- findUORFs(uORFSeachRegion, fa, startCodon = startCodons,
+                                 minimumLength = 0, longestORF = FALSE)
+      rangesOfuORFs <- ORFik:::filterUORFs(rangesOfuORFs, get("cds", mode = "S4"))
+      save(rangesOfuORFs, file = saveName)
+      return(i)
+    }
+    return(0)
+  })
+}
+
+#' Find uORFs from new leaders
+#'
+#' Step 3 of uORFome pipeline
+#' @export
+getIDsFromUorfs <- function(folder = uorfFolder){
+  uorfFiles = list.files(folder)
+
+  message("Creating uORF ID's")
+  bplapply(1:length(uorfFiles), function(i) {
+    baseName <- list.files(folder)[i]
+    load(paste0(folder, baseName))
+
+    uorfID <- unique(ORFik:::orfID(rangesOfuORFs))
+    saveName = paste0(idFolder, gsub("uorf.rdata","",baseName), "uorfID.rdata")
+    save(uorfID, file = saveName)
+    print("ok")
+  })
+}
+
+#' This function uses the fact that 1st col of ribo is connected to 1st col of RNA.
+getTeFeatures <- function(riboDbName = "fpkmRFP",
+                          dbOutputNames = c("teUnfiltered", "teFiltered")){
+  if(length(dbOutputNames) != 2) stop("dbOutputNames must have 2 character elements")
+
+  # load linking and ribo / rna
+  RFP <- readTable(riboDbName)
+  RNA <- readTable("fpkmRNA")
+
+  RNA <- matchByTranscript(RNA, RFP)
+  RNA <- removeIDColumns(RNA)
+
+  if(nrow(RFP) != nrow(RNA)) stop("riboseq and rnaseq tables have different # of rows")
+  if(ncol(RFP) != ncol(RNA)) stop("riboseq and rnaseq tables have different # of cols")
+  # find number of linkings we have
+  nTE <- ncol(RFP)
+
+  # unfiltered without pseudoCounts
+  teTable <- foreach(i = 1:nTE, .combine = 'cbind') %do% {
+    print(i)
+    return(RFP[,i, with = F] / RNA[,i, with = F])
+  }
+
+  teTable <- data.table(txNames, teTable)
+  insertTable(teTable, dbOutputNames[1], rmOld = T)
+
+  # filtered with pseudoCounts
+
+  teTable <- foreach(i = 1:nTE, .combine = 'cbind') %do% {
+    print(i)
+    return((RFP[,i, with = F] + 1) / (RNA[,i, with = F] + 1))
+  }
+  teTable <- data.table(txNames, teTable)
+  insertTable(teTable, dbOutputNames[2], rmOld = T)
+}
+#' Get CDS Ribo-seq features
+#' @param df.rfp
+getCDSFeatures <- function(df.rfp) {
+  getCDS()
+  getGeneralRiboFeatures(df.rfp, grl = cds, preName = "three")
+}
+
+#' Get 3' UTR Ribo-seq features
+#' @param df.rfp
+getFeaturesThreeUTRs <- function(df.rfp){
+  if(tableNotExists("threeIos")) {
+    getThreeUTRs()
+    threeUTRs <- threeUTRs[widthPerGroup(threeUTRs) > 5]
+    threeWidth <- median(widthPerGroup(threeUTRs))
+    # this is a crap region to use ->
+    fakeThree <- GRanges(seqnamesPerGroup(threeUTRs, F),
+                         IRanges(stopSites(threeUTRs, is.sorted = T) + 1, width = threeWidth),
+                         strand = strandPerGroup(threeUTRs, F))
+    names(fakeThree) <- names(threeUTRs)
+    fakeThree <- groupGRangesBy(fakeThree)
+    rm(tx)
+
+    getGeneralRiboFeatures(df.rfp, grl = threeUTRs, preName = "three",
+                           threeUTRsSpecial = fakeThree)
+  }
+}
+
+

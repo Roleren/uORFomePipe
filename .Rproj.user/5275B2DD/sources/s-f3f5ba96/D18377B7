@@ -1,0 +1,25 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1587495162738.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "D18377B7",
+    "lastKnownWriteTime" : 1587495260,
+    "last_content_update" : 1587495260296,
+    "path" : "/export/valenfs/projects/uORFome/RCode1/uORFomePipe/R/GRangesHelpers.R",
+    "project_path" : "R/GRangesHelpers.R",
+    "properties" : {
+        "cursorPosition" : "4,38",
+        "scrollLine" : "0"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 4,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

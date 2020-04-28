@@ -1,0 +1,26 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1587816931148.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "C54B7303",
+    "lastKnownWriteTime" : 1587816962,
+    "last_content_update" : 1587816962755,
+    "path" : "/export/valenfs/projects/uORFome/RCode1/uORFomePipe/R/ClassifierTrainingData.R",
+    "project_path" : "R/ClassifierTrainingData.R",
+    "properties" : {
+        "cursorPosition" : "27,75",
+        "scrollLine" : "12",
+        "tempName" : "Untitled1"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 7,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

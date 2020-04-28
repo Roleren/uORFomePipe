@@ -1,0 +1,25 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1587635246492.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "204627812",
+    "id" : "73CA09A5",
+    "lastKnownWriteTime" : 1587978618,
+    "last_content_update" : 1587978618,
+    "path" : "/export/valenfs/projects/uORFome/RCode1/uORFomePipe/R/DataBaseCreator.R",
+    "project_path" : "R/DataBaseCreator.R",
+    "properties" : {
+        "cursorPosition" : "43,12",
+        "scrollLine" : "0"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 3,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

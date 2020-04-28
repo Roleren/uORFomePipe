@@ -1,0 +1,25 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1587762675868.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "9E61B9E",
+    "lastKnownWriteTime" : 1587576585,
+    "last_content_update" : 1587576585,
+    "path" : "/export/valenfs/projects/uORFome/RCode1/uORFomePipe/R/databaseHelpers.R",
+    "project_path" : "R/databaseHelpers.R",
+    "properties" : {
+        "cursorPosition" : "123,38",
+        "scrollLine" : "84"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 6,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

@@ -1,0 +1,25 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1587635274576.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "4196350007",
+    "id" : "5BF10ED2",
+    "lastKnownWriteTime" : 1587636586,
+    "last_content_update" : 1587636586034,
+    "path" : "/export/valenfs/projects/uORFome/RCode1/uORFomePipe/R/DataBaseGroupers.R",
+    "project_path" : "R/DataBaseGroupers.R",
+    "properties" : {
+        "cursorPosition" : "1,58",
+        "scrollLine" : "0"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 4,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
