@@ -15,7 +15,7 @@
 orfikDirs <- function(mainPath, df.rfp, df.rna, df.cage,
                       organism, biomart = "not_decided") {
   setwd(mainPath)
-  message("Welcome, setting up uORFome folders")
+  message("Welcome, setting up uORFome folders\n")
   message(p("Registered organism is: ", organism))
   biomart_dataset <- getBiomartFromOrganism(organism)
 
@@ -108,13 +108,13 @@ orfikDirs <- function(mainPath, df.rfp, df.rna, df.cage,
   validateInputs(df.rfp, df.rna, df.cage)
 
   message("This is default backend:")
-  print(registered()[1])
+  #print(registered()[1])
   message(p("Using ", registered()[[1]]$workers, " threads from CPU"))
   message(p("Example on how to register default backend to 10 cores:"))
   print("register(MulticoreParam(workers = 10), default=TRUE)")
 
 
-  message("uORFome is now ready")
+  message("\nuORFome is now ready")
   return(invisible(NULL))
 }
 

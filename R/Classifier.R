@@ -9,7 +9,7 @@
 #' @param max_mem_size max allowed memory for H20: default ("200G")
 #' @export
 #' @import h2o
-predictUorfs <- function(tissues, nthreads_h2o = max(45, detectCores()/3),
+predictUorfs <- function(tissues, nthreads_h2o = min(45, as.integer(detectCores()/3)),
                          max_mem_size = "200G") {
   for (tissue in tissues) {
     message(p("Prediction for tissue: ", tissue))

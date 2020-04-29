@@ -23,7 +23,8 @@ forest <- function(dt, cv = 10, ntrees = 64, nthreads = 40,  max_mem_size = "200
 #' @param tissue tissue to make combined prediction
 #' @return data.table with 3 columns. 1. "prediction" (1 or 0), 2. p0 (probability for FALSE),
 #' p1 (probability for TRUE)
-makeCombinedPrediction <- function(tissue, dataFolder = get("dataFolder", envir = .GlobalEnv)) {
+makeCombinedPrediction <- function(tissue, dataFolder = get("dataFolder", envir = .GlobalEnv),
+                                   grl = getUorfsInDb()) {
   # load data
   prediction <- readRDS(paste0("prediction_model/prediction_",tissue,".rds"))
   load(paste0(dataFolder,"/tissueAtlas.rdata"))
@@ -32,13 +33,14 @@ makeCombinedPrediction <- function(tissue, dataFolder = get("dataFolder", envir 
 
   cageTissuesPrediction <- copy(tissueAtlas)
   for(i in colnames(cageTissuesPrediction)[-1]) {
-    cageTissuesPrediction[, paste(i) := (tissueAtlas[,i, with=F] & some)]
+    cageTissuesPrediction[, paste(i) := (tissueAtlas[,i, with=FALSE] & some)]
   }
-  insertTable(cageTissuesPrediction, "tissueAtlasByCageAndPred", rmOld = T)
+  insertTable(cageTissuesPrediction, "tissueAtlasByCageAndPred", rmOld = TRUE)
   finalCagePred <- rowSums(cageTissuesPrediction[,-1]) > 0
   insertTable(finalCagePred, "finalCAGEuORFPrediction", rmOld = T)
 
   startCodonMetrics(finalCagePred)
+  export.bed12(grl, file = p("uORFs_", tissue, "_prediction_in_color.bed"), rgb = 255*finalCagePred)
   return(data.table(prediction = finalCagePred, prediction[, 2:3]))
 }
 

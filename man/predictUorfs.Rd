@@ -6,7 +6,7 @@
 \usage{
 predictUorfs(
   tissues,
-  nthreads_h2o = max(45, detectCores()/3),
+  nthreads_h2o = min(45, as.integer(detectCores()/3)),
   max_mem_size = "200G"
 )
 }

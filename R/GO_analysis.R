@@ -33,7 +33,7 @@ getORFsGoTerms <- function(geneNames, organism){
 #' Guess biomart from organism name
 #' @param organism scientific name
 #' @param biomart character, default "ensembl"
-#' @importFrom biomaRt getBM
+#' @importFrom biomaRt listDatasets
 #' @importFrom biomaRt useEnsembl
 #' @return a character with dataset used
 getBiomartFromOrganism <- function(organism, biomart="ensembl") {

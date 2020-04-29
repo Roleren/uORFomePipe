@@ -6,7 +6,7 @@ This package is still under development, although this version is stable and can
 #### About
 
 
-uORFomePipe is a R package containing a prediction pipeline and analysis using Ribo-Seq, RNA-Seq, Cage-Seq. related to transcriptomics.
+uORFomePipe is a R package containing a prediction pipeline and analysis tools using Ribo-Seq, RNA-Seq and CAGE.
 
 - 1. set up parameters and experiment
 - 2. Find new cage leaders
@@ -91,7 +91,7 @@ Here we subset to only do analysis on 3 stages: fertilzed(2to4 cells stage), Dom
 ```
 If the function orfikDirs does not give you an error, you are good to go.
 
-# Creating the uORF features used to prediction
+# Creating the uORF features used for prediction
 ```r
 #¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
 # 2. Find uORF search region per CAGE
@@ -142,6 +142,13 @@ featureAnalysis(prediction, tissue = "all")
 
 ![uORF analysis](inst/extdata/analysis_plot.png)
 
+You here see the candidate uORFs on left side and predicted uORFs on right side
+
+With the bed12 uORFs you also get as output, you can go to IGV and check them out.
+Here is a good example from the atf4a gene, were a uORF is tissue specific, so not in the original annotation and the uORFome
+pipeline finds it.
+
+![atf4a uORF](inst/extdata/atf4a_uORF.png)
 
 Here is full script:
 ```r
