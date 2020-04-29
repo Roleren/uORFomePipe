@@ -10,6 +10,13 @@ varianceTissueUsage(
   pred = readTable("tissueAtlasByCageAndPred", with.IDs = FALSE)
 )
 }
+\arguments{
+\item{tissue1}{logical TRUE / FALSE}
+
+\item{tissue2}{logical TRUE / FALSE}
+
+\item{pred}{default}
+}
 \description{
 Venn diagram between two tissues
 }

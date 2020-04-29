@@ -1,7 +1,7 @@
 #' Train h2o rf model.
 #' negDT if you want own samples for that
+#' @import h2o
 forest <- function(dt, cv = 10, ntrees = 64, nthreads = 40,  max_mem_size = "200G"){
-  library(h2o)
   h2o.init(nthreads = nthreads, max_mem_size = max_mem_size, port = 20050)
   # new h2o model training
   indices <- sample(1:nrow(dt), 0.6*nrow(dt), replace = F)

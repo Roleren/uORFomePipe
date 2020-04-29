@@ -41,7 +41,7 @@ getCandidateuORFs <- function(folder = regionUORFsFolder,
     saveName = p(uorfFolder, gsub(pattern = "regionUORF.rds", replacement = "uorf.rds",
                                   x = basename(i)))
     if (!file.exists(saveName)) {
-      uORFomePipe:::getFasta()
+      getFasta()
       rangesOfuORFs <- findUORFs(readRDS(i), fa, startCodon = startCodons,
                                  stopCodon = stopCodons,
                                  minimumLength = 0, longestORF = FALSE)
@@ -79,10 +79,10 @@ createCatalogueDB <- function(df.cage,
                               idFolder = get("idFolder", envir = .GlobalEnv),
                               dataFolder = get("dataFolder", envir = .GlobalEnv),
                               leadersFolder = get("leadersFolder", envir = .GlobalEnv)) {
-  uORFomePipe:::createUniqueIDs(idFolder) # IDs for uORFs as matrix
-  uORFomePipe:::createGRObjects(dataFolder, leadersFolder) # GRanges objects for all uORFs
-  uORFomePipe:::createUORFAtlas(idFolder, dataFolder) # Per CAGE reassigned tx annotation, does uORF exist ?
-  uORFomePipe:::getTissueTable(df.cage, dataFolder)  # Per CAGE tissue, does uORF exist ?
+  createUniqueIDs(idFolder) # IDs for uORFs as matrix
+  createGRObjects(dataFolder, leadersFolder) # GRanges objects for all uORFs
+  createUORFAtlas(idFolder, dataFolder) # Per CAGE reassigned tx annotation, does uORF exist ?
+  getTissueTable(df.cage, dataFolder)  # Per CAGE tissue, does uORF exist ?
 }
 
 #' All features from sequence, Riboseq and RNAseq

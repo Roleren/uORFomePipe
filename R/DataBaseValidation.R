@@ -71,6 +71,9 @@ startAndStopCodonPlots <- function() {
 }
 
 #' Venn diagram between two tissues
+#' @param tissue1 logical TRUE / FALSE
+#' @param tissue2 logical TRUE / FALSE
+#' @param pred default
 #' @import VennDiagram
 varianceTissueUsage <- function(tissue1, tissue2, pred = readTable("tissueAtlasByCageAndPred", with.IDs = FALSE)) {
   stop("not working yet")
@@ -87,8 +90,9 @@ varianceTissueUsage <- function(tissue1, tissue2, pred = readTable("tissueAtlasB
   boOver <- grid.arrange(gTree(children=boOver), top=textGrob("uORF overlaps", gp=gpar(fontsize=20,font=8)),
                          bottom="")
 
-  library(cowplot)
-  plot_grid(predAll,boOver, align='hv',nrow=1,labels=c('A','B'))
+  # library(cowplot)
+  # plot_grid(predAll,boOver, align='hv',nrow=1,labels=c('A','B'))
+  gridExtra::grid.arrange(predAll, boOver, nrow = 1)
 }
 
 
