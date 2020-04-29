@@ -40,7 +40,7 @@ makeCombinedPrediction <- function(tissue, dataFolder = get("dataFolder", envir 
   insertTable(finalCagePred, "finalCAGEuORFPrediction", rmOld = T)
 
   startCodonMetrics(finalCagePred)
-  export.bed12(grl, file = p("uORFs_", tissue, "_prediction_in_color.bed"), rgb = 255*finalCagePred)
+  export.bed12(grl, file = p("candidate_and_predicted_uORFs_", tissue, "_by_color.bed"), rgb = 255*finalCagePred)
   return(data.table(prediction = finalCagePred, prediction[, 2:3]))
 }
 

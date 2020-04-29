@@ -36,8 +36,6 @@ createGRObjects <- function(dataFolder, leadersFolder){
     save(grl, file = p(dataFolder, "/uniqueUorfsAsGR.rdata"))
     insertTable(Matrix = uniqueIDs, tableName =  "uniqueIDs", rmOld = T)
     insertTable(Matrix = grl,tableName = "SplittedByExonsuniqueUORFs", rmOld = T)
-    # Something wrong here
-    export.bed12(grl, p(dataFolder, "/candidate_uORFs.bed"))
 
     # make all spanning cage leader from cage
     allLeadersSpanningLeader(leadersFolder, dataFolder)

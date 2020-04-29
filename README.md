@@ -34,8 +34,8 @@ if (requireNamespace("devtools")) {
 ```  
 
 #### Tutorial
-Here we show an example of predicting active uORFs between 3 stages in zebrafish
-For you to run, make a new script window in R and paste in the parts.
+Here we show an example of predicting active uORFs between 3 stages in a zebrafish developmental timeline.
+For you to run, make a new script window in R and paste in the script at the bottom of the page. 
 
 # Preparing NGS data and annotation as ORFik experiment
 To prepare the Ribo-seq, RNA-seq and CAGE, we make the data into ORFik experiment.
@@ -44,6 +44,8 @@ This is to make sure no mistakes are made and all data is valid, and easier grou
 First read about how ORFik experiment works:
 [ORFik experiment tutorial](https://bioconductor.org/packages/release/bioc/vignettes/ORFik/inst/doc/ORFikExperiment.html)
 
+Since we don't need most of the information in bam files, we create simplified libraries (bed files). And for Ribo-seq we p-shift
+the data.
 ```r
 library(uORFomePipe)
 #¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
@@ -69,6 +71,11 @@ if (0) { # Do this only once!
 
 # Preparing NGS data and annotation as ORFik experiment
 Here we subset to only do analysis on 3 stages: fertilzed(2to4 cells stage), Dome and Shield.
+
+You need to set these parameters in the orfikDirs function:
+1. mainPath: the directory to use for uORFomePipe results
+2. df.rfp, df.rna, df.cage: the Ribo-seq, RNA-seq and CAGE ORFik experiments
+3. organism: For GO analysis we need to know which organism this is (scientific name)
 ```r
 #¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
 # INIT (START HERE)
@@ -85,8 +92,9 @@ Here we subset to only do analysis on 3 stages: fertilzed(2to4 cells stage), Dom
   df.rna <- df.rna[df.rna$stage %in% stages & df.rna$condition %in% conditions,]
   df.cage <- df.cage[df.cage$stage %in% stages & df.cage$condition %in% conditions,]; df.cage[1,2] <- df.rna$stage[1]
   
-  orfikDirs(mainPath = "/export/valenfs/projects/Hakon/uORFome_zebrafish", 
-            df.rfp, df.rna, df.cage)
+  orfikDirs(mainPath = "/export/valenfs/projects/Hakon/uORFome_zebrafish",
+            df.rfp, df.rna, df.cage,
+            organism = "Danio rerio")
 }
 ```
 If the function orfikDirs does not give you an error, you are good to go.
@@ -150,7 +158,7 @@ pipeline finds it.
 
 ![atf4a uORF](inst/extdata/atf4a_uORF.png)
 
-Here is full script:
+Here is the full script you can modify for your needs:
 ```r
 library(uORFomePipe)
 #¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
