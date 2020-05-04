@@ -23,25 +23,33 @@ forest <- function(dt, cv = 10, ntrees = 64, nthreads = 40,  max_mem_size = "200
 #' @param tissue tissue to make combined prediction
 #' @return data.table with 3 columns. 1. "prediction" (1 or 0), 2. p0 (probability for FALSE),
 #' p1 (probability for TRUE)
-makeCombinedPrediction <- function(tissue, dataFolder = get("dataFolder", envir = .GlobalEnv),
+makeCombinedPrediction <- function(tissues, dataFolder = get("dataFolder", envir = .GlobalEnv),
                                    grl = getUorfsInDb()) {
+  if (!tableNotExists("finalPredWithProb")) {
+    return(readTable("finalPredWithProb"))
+    }
   # load data
-  prediction <- readRDS(paste0("prediction_model/prediction_",tissue,".rds"))
-  load(paste0(dataFolder,"/tissueAtlas.rdata"))
-
-  some <- prediction$predict == 1 # set value
-
-  cageTissuesPrediction <- copy(tissueAtlas)
-  for(i in colnames(cageTissuesPrediction)[-1]) {
-    cageTissuesPrediction[, paste(i) := (tissueAtlas[,i, with=FALSE] & some)]
+  predicted_by_Ribo <- data.table()
+  for (tissue in tissues) {
+    prediction <- readRDS(paste0("prediction_model/prediction_", tissue, ".rds"))
+    predicted_by_Ribo <- cbind(predicted_by_Ribo, prediction$predict == 1) # set value
   }
+
+  tissueAtlas <- readRDS(paste0(dataFolder,"/tissueAtlas.rds"))[,-1]
+  if ("combined" %in% tissues) tissueAtlas$combined <- rowSums(tissueAtlas) > 0
+  cageTissuesPrediction <- tissueAtlas & predicted_by_Ribo
+
   insertTable(cageTissuesPrediction, "tissueAtlasByCageAndPred", rmOld = TRUE)
-  finalCagePred <- rowSums(cageTissuesPrediction[,-1]) > 0
-  insertTable(finalCagePred, "finalCAGEuORFPrediction", rmOld = T)
+  finalCagePred <- rowSums(cageTissuesPrediction) > 0
+  insertTable(finalCagePred, "finalCAGEuORFPrediction", rmOld = TRUE)
+
+  finalCagePred.dt <- data.table(prediction = finalCagePred, prediction[, 2:3])
+  insertTable(finalCagePred.dt, "finalPredWithProb", rmOld = TRUE)
 
   startCodonMetrics(finalCagePred)
-  export.bed12(grl, file = p("candidate_and_predicted_uORFs_", tissue, "_by_color.bed"), rgb = 255*finalCagePred)
-  return(data.table(prediction = finalCagePred, prediction[, 2:3]))
+  export.bed12(grl, file = p("candidate_and_predicted_uORFs_", tissue, ".bed"), rgb = 255*finalCagePred)
+  message("Prediction finished, now do the analysis you want")
+  return(finalCagePred.dt)
 }
 
 #' strongCDS
@@ -59,14 +67,23 @@ getTissueFromFeatureTable <- function(tableName, tissue) {
   if (tableNotExists(tableName)) stop(paste("table does not exist:",
                                             tableName))
   uORFomePipe:::createDataBase(p(dataBaseFolder, "/uorfCatalogue.sqlite"))
-  riboTable <- readTable(tableName, with.IDs = FALSE)
-  if (is.null(tissue) | (tissue == "all")) {
-    print("Grouping all together")
-  } else if ((tissue %in% as.character(unique(rpfSamples$tissue)))){
-    indices <- rpfSamples$tissue == tissue
-    riboTable <- riboTable[,indices, with = F]
+  riboTable <- readTable(tableName)
+  tissues <- readTable("tissues_RiboSeq")[[1]]
+  if (is.null(tissue) | (tissue == "combined")) {
+  } else if (tissue %in% tissues){
+    indices <- tissues == tissue
+    riboTable <- riboTable[, indices, with = FALSE]
   } else stop("tissue does not exist in db")
   return(data.table(rowMeans(riboTable)))
+}
+
+#' Get all data for combined dataset
+getAllUORFData <- function(prediction = readTable("finalPredWithProb"),
+                           stringsAsFactors = TRUE) {
+  uorfTable <- makeORFPredictionData(tissue)
+  uorfData <- getAllSequenceFeaturesTable()
+
+  return(data.table(prediction, uorfTable, uorfData, stringsAsFactors = stringsAsFactors))
 }
 
 #' Not used in prediction

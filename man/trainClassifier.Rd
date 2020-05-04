@@ -4,10 +4,10 @@
 \alias{trainClassifier}
 \title{The training model with cds and 3' UTRs as random forest}
 \usage{
-trainClassifier(tissue = NULL, nthreads, max_mem_size)
+trainClassifier(tissue, nthreads, max_mem_size)
 }
 \arguments{
-\item{tissue}{Tissues to train on, use all if you want all in one}
+\item{tissue}{Tissues to train on, use "combined" if you want all in one}
 }
 \description{
 The training model with cds and 3' UTRs as random forest

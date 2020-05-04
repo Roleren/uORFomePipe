@@ -112,12 +112,12 @@ getTissueTable <- function(cageTable, dataFolder){
       if (i %in% onlyOneCAGE) {
         finalMatrix[, uniqueTissues[i-1] := makeGroupingForColumn > 0]
       } else {
-        finalMatrix[, uniqueTissues[i-1] := makeGroupingForColumn > 1]
+        finalMatrix[, uniqueTissues[i-1] := makeGroupingForColumn > 0]
       }
     }
     tissueAtlas <- finalMatrix
 
-    save(tissueAtlas,file = p(dataFolder,"/tissueAtlas.rdata"))
+    saveRDS(tissueAtlas, file = p(dataFolder,"/tissueAtlas.rds"))
     insertTable(Matrix = tissueAtlas,tableName = "tissueAtlasByCage", rmOld = T)
     return("ok tissueAtlassCage")
   }

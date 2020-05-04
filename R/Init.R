@@ -11,6 +11,7 @@
 #' @param biomart default "not_decided" will be automaticly detected by
 #' organism name. Set it if you know.
 #' @importFrom tools file_ext
+#' @importFrom BiocParallel registered
 #' @export
 orfikDirs <- function(mainPath, df.rfp, df.rna, df.cage,
                       organism, biomart = "not_decided") {

@@ -5,14 +5,16 @@
 \title{Get CDS and 3'UTR TrainingData of ribo seq features}
 \usage{
 makeTrainingData(
-  tissue,
+  tissues = "combined",
   features = c("countRFP", "disengagementScores", "entropyRFP", "startRegionCoverage",
     "startRegionRelative", "floss", "ioScore", "ORFScores", "fpkmRFP", "RRS", "RSS",
     "startCodonCoverage")
 )
 }
 \arguments{
-\item{tissue}{Tissue to train on, use "all" if you want all in one}
+\item{features}{features to train model on, must exist in database}
+
+\item{tissue}{Tissue to train on, use "combined" if you want all in one}
 }
 \description{
 Positive set is cds, negative is downstream region of 3' UTRs

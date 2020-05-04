@@ -5,14 +5,16 @@
 \title{Predict table for uORFs}
 \usage{
 makeORFPredictionData(
-  tissue = "all",
+  tissues = "combined",
   features = c("countRFP", "disengagementScores", "entropyRFP", "startRegionCoverage",
     "startRegionRelative", "floss", "ioScore", "ORFScores", "fpkmRFP", "RRS", "RSS",
     "startCodonCoverage")
 )
 }
 \arguments{
-\item{tissue}{default "all"}
+\item{features}{features to train model on, must exist in database}
+
+\item{tissue}{Tissue to train on, use "combined" if you want all in one}
 }
 \description{
 Get ribo-seq features for uORFs

@@ -4,7 +4,7 @@
 \alias{getBestIsoformStartCodonCoverage}
 \title{A filter per stop codon group}
 \usage{
-getBestIsoformStartCodonCoverage(cdsAndThree = F)
+getBestIsoformStartCodonCoverage(tissue, cdsAndThree = FALSE)
 }
 \description{
 Uses the ribo-seq libraries for ribo-seq validation

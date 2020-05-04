@@ -5,7 +5,7 @@
 \title{Combine classifier and CAGE data, for final prediction table}
 \usage{
 makeCombinedPrediction(
-  tissue,
+  tissues,
   dataFolder = get("dataFolder", envir = .GlobalEnv),
   grl = getUorfsInDb()
 )

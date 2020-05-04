@@ -12,7 +12,7 @@ getSequenceFeatures <- function(organism, biomart) {
   uORFomePipe:::getAll(); uORFomePipe:::getGTF()
   # gene transcript connections for naming
   dt <- data.table(txNames = txNames(grl), geneNames = ORFik:::txNamesToGeneNames(txNames(grl), Gtf))
-  insertTable(dt, "uORFTxToGene")
+
 
   # kozak
   kozak <- kozakSequenceScore(grl, tx, fa)
@@ -44,6 +44,7 @@ getSequenceFeatures <- function(organism, biomart) {
   }
 
   # Gene information
+  insertTable(dt, "uORFTxToGene")
   # Gene to symbol
   insertTable(getAllORFGeneSymbols(dt$geneNames, biomart), "geneSymbols")
 
@@ -52,12 +53,21 @@ getSequenceFeatures <- function(organism, biomart) {
   link <- readTable("linkORFsToTx")
   eej <- as.integer(eej[link$txNames])
   insertTable(data.table(eej = eej), "exon-exonJunctionsLeader")
-  # Stop codon grouping
-  insertTable(data.table(stopCodonGrouping = uniqueOrder(stops)), "stopCodonGrouping")
+
   # number of uorfs per tx
   txNames <- txNames(grl)
   numberOfUorfsPerTx <- S4Vectors::Rle(txNames)
   insertTable(data.table(nUorfs = runLength(numberOfUorfsPerTx)), "numberOfUorfsPerTx")
+
+  # Stop codon grouping (also for cds and threeUTRs)
+  insertTable(data.table(stopCodonGrouping = uniqueOrder(stops)), "stopCodonGrouping")
+
+  # cds
+  sg <- stopCodons(cds[widthPerGroup(cds) > 5], is.sorted = TRUE)
+  insertTable(data.table(stopCodonGrouping = uniqueOrder(sg)), "cdsstopCodonGrouping")
+  # trailers
+  sg <- stopCodons(threeUTRs[widthPerGroup(threeUTRs) > 5], is.sorted = T)
+  insertTable(data.table(stopCodonGrouping = uniqueOrder(sg)), "threestopCodonGrouping")
 
   return(invisible(NULL))
 }

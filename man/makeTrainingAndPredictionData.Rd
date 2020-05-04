@@ -7,8 +7,7 @@
 makeTrainingAndPredictionData(
   df.rfp,
   df.rna,
-  tissue,
-  organism,
+  organism = get("biomart_dataset", mode = "character", envir = .GlobalEnv),
   biomart = get("biomart_dataset", mode = "character", envir = .GlobalEnv)
 )
 }

@@ -1,25 +1,29 @@
 #' Plot top tissues
 #'
 #' Shows max 20 tissues
+#' @param saveName full name of location to save to, will save as png
 #' @import ggplot2
 #' @import gridExtra
 #' @export
-predictionVsCageHits <- function(saveName){
-  cageTissues <- readTable("tissueAtlasByCage", with.IDs = FALSE)
+predictionVsCageHits <- function(saveName = "differential_uORF_usage"){
+  cageTissues <- readRDS(paste0(dataFolder,"/tissueAtlas.rds"))[,-1]
+  cageTissues$combined <- rowSums(cageTissues) > 0
 
   cageRed <- cageTissues[, colSums(cageTissues) > 0, with = F]
   inAll <- sum(rowSums(cageRed) == ncol(cageRed))
   bestNames <- names(sort(-colSums(cageRed)))[1:min(20, ncol(cageRed))]
   cageRed <- cageRed[,bestNames, with = F]
-  values <- c(colSums(cageRed) - inAll, rep(inAll, ncol(cageRed)))
+  values <- c(rep(inAll, ncol(cageRed)), colSums(cageRed) - inAll)
   variable <- c(rep(colnames(cageRed), 2))
-  type <- c(rep("Unique uORFs tissue", ncol(cageRed)), rep("uORFs in all tissues", ncol(cageRed)))
+  type <- c(rep("uORFs in all tissues", ncol(cageRed)), rep("uORFs in this tissue", ncol(cageRed)))
   df <- data.table(value = values, variable, type)
-  df <- df[order(value),]
-  df$variable <- factor(df$variable, levels = unique(df$variable), ordered = T)
+  df$type <- factor(df$type, levels = c("uORFs in all tissues", "uORFs in this tissue"), ordered = TRUE)
+  df$variable <- factor(df$variable, levels = df[, sum(value), by = variable][order(V1),]$variable, ordered = TRUE)
   cageAll <- ggplot(df, aes(x=variable,y=value,fill=type)) +
-    geom_bar(stat="identity", position="stack") +
+    scale_fill_manual(values = c("turquoise3", "brown1")) +
+    geom_bar(stat="identity", position =  position_stack(reverse = TRUE)) +
     xlab("Tissue")+ylab("# uORFs found by CAGE") +
+    scale_y_continuous(labels = scales::scientific) +
     theme(axis.text.y = element_text(size = 10)) +
     guides(fill=FALSE) +
     coord_flip()
@@ -30,23 +34,24 @@ predictionVsCageHits <- function(saveName){
   bestNames <- names(sort(-colSums(cageTissuesPrediction)))[1:min(20, ncol(cageRed))]
 
   cageRed <- cageTissuesPrediction[,bestNames, with = F]
-  values <- c(colSums(cageRed) - inAll, rep(inAll, ncol(cageRed)))
-  variable <- c(rep(colnames(cageRed), 2))
-  type <- c(rep("Unique uORFs tissue", ncol(cageRed)), rep("uORFs in all tissues", ncol(cageRed)))
+  values <- c(rep(inAll, ncol(cageRed)), colSums(cageRed) - inAll)
+  variable <- rep(colnames(cageRed), 2)
+  type <- c(rep("uORFs in all tissues", ncol(cageRed)), rep("uORFs in this tissue", ncol(cageRed)))
   df <- data.table(value = values, variable, type)
-  df <- df[order(value),]
-  df$variable <- factor(df$variable, levels = unique(df$variable), ordered = T)
+  df$type <- factor(df$type, levels = c("uORFs in all tissues", "uORFs in this tissue"), ordered = TRUE)
+  df$variable <- factor(df$variable, levels = df[, sum(value), by = variable][order(V1),]$variable, ordered = TRUE)
   predAll <- ggplot(df, aes(x=variable, y=value, fill=type)) +
-    geom_bar(stat="identity", position="stack") +
-    scale_fill_discrete(name="uORF counts in final prediction") +
+    geom_bar(stat="identity", position =  position_stack(reverse = TRUE)) +
+    scale_fill_manual(values = c("turquoise3", "brown1")) +
+    scale_y_continuous(labels = scales::scientific) +
     xlab("Tissue")+ylab("# predicted active uORFs") +
-    guides(fill=FALSE) +
+    guides() +
     theme(axis.text.y = element_text(size = 10)) +
     coord_flip()
   pred <- gridExtra::grid.arrange(top = "uORF prediction", cageAll, predAll, ncol = 2)
-  codons <- startAndStopCodonPlots()
-  gridExtra::grid.arrange(pred, codons, ncol = 1)
-
+  codons <- uORFomePipe:::startAndStopCodonPlots()
+  grid <- gridExtra::grid.arrange(pred, codons, ncol = 1)
+  ggsave(p(saveName, ".png"), grid, width = 200, units = "mm")
   return(invisible(NULL))
 }
 

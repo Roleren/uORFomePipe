@@ -4,7 +4,10 @@
 \alias{predictionVsCageHits}
 \title{Plot top tissues}
 \usage{
-predictionVsCageHits(saveName)
+predictionVsCageHits(saveName = "differential_uORF_usage")
+}
+\arguments{
+\item{saveName}{full name of location to save to, will save as png}
 }
 \description{
 Shows max 20 tissues

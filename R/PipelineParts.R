@@ -64,7 +64,7 @@ getIDsFromUorfs <- function(folder = uorfFolder, BPPARAM = bpparam()){
   bplapply(uorfFiles, function(i) {
     saveName = paste0(idFolder, gsub("uorf.rds","", basename(i)), "uorfID.rds")
     saveRDS(unique(ORFik:::orfID(readRDS(i))), file = saveName)
-    print("ok")
+    return(i)
   }, BPPARAM = BPPARAM)
 }
 
@@ -89,7 +89,8 @@ createCatalogueDB <- function(df.cage,
 #'
 #' Step 5 of uORFome pipeline
 #' @export
-makeTrainingAndPredictionData <- function(df.rfp, df.rna, tissue, organism,
+makeTrainingAndPredictionData <- function(df.rfp, df.rna,
+                                          organism = get("biomart_dataset", mode = "character", envir = .GlobalEnv),
                                           biomart = get("biomart_dataset", mode = "character", envir = .GlobalEnv)) {
   # first sequence features
   getSequenceFeatures(organism, biomart)
@@ -103,8 +104,8 @@ makeTrainingAndPredictionData <- function(df.rfp, df.rna, tissue, organism,
   getGeneralRiboFeatures(df.rfp, grl = threeUTRs[widthPerGroup(threeUTRs) > 5],
                          preName = "three", threeUTRsSpecial = getSpecialThreeUTRs())
 
-  uORFomePipe:::makeTrainingData(tissue)
-  uORFomePipe:::makeORFPredictionData(tissue)
+  uORFomePipe:::makeTrainingData(df.rfp)
+  uORFomePipe:::makeORFPredictionData(df.rfp)
   message("Training complete")
   return(invisible(NULL))
 }

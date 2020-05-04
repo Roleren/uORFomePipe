@@ -28,21 +28,20 @@ startCodonMetrics <- function(hits){
 featureAnalysis <- function(prediction, tissue = "all"){
   uorfTable <- makeORFPredictionData(tissue)
   uts <- uorfTable
-  # print("orf score correlation with ribo prediction")
-  # print(cor.test(uorfTable$ORFScores, as.double(prediction$p1)))
+
   uorfData <- getAllSequenceFeaturesTable()
-  uds <- uorfData
+  uds <- data.table(uorfData, stringsAsFactors = TRUE)
 
   pred <- prediction$predict
   print("Output feature summaries")
   print("For ribo seq prediction")
-  for(i in colnames(uorfTable)){
+  for(i in colnames(uorfTable)) {
     message(i)
     print(data.table(pos = data.table(summary(uts[pred == 1, i, with = F]))[,3],
                      neg = data.table(summary(uts[pred == 0, i, with = F]))[,3]))
   }
   print("On sequence feature table")
-  for(i in colnames(uorfData)){
+  for(i in colnames(uorfData)) {
     message(i)
     print(data.table(pos = data.table(summary(uds[pred == 1, i, with = F]))[,3],
                      neg = data.table(summary(uds[pred == 0, i, with = F]))[,3]))
