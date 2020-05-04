@@ -15,7 +15,8 @@ Depends:
   R (>= 3.6.0),
   ORFik,
   GenomicRanges,
-  DBI
+  DBI, 
+  data.table
 Imports:
   tools,
   h2o,

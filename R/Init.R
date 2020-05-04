@@ -90,8 +90,7 @@ orfikDirs <- function(mainPath, df.rfp, df.rna, df.cage,
       txdb <- loadTxdb(p(dataFolder, "/Gtf.db"))
 
     } else if(f == "db" | f == "sqlite") {
-      txdb <- loadDb(gtfdb)
-      txdb <- ORFik:::matchSeqStyle(txdb, seqstyle)
+      txdb <- loadTxdb(gtfdb, chrStyle = seqstyle)
       saveDb(txdb, p(dataFolder, "/Gtf.db"))
     } else stop("when txdb is path, must be one of .gff, .gtf and .db")
     loadRegions(txdb, c("tx", "cds", "fiveUTRs", "threeUTRs"))
@@ -126,5 +125,7 @@ validateInputs <- function(df.rfp, df.rna, df.cage) {
     stop("Not equal tissues/stages in RNA-seq and Ribo-seq")
   if (!all(df.rfp$stage %in% df.cage$stage))
     stop("Not equal tissues/stages in CAGE and Ribo-seq")
+  message(p("Tissues validated, will run for ", length(unique(df.rfp$stage)), " tissues:"))
+  print(unique(df.rfp$stage))
   return(invisible(NULL))
 }
