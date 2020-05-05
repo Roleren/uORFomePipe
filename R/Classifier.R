@@ -23,8 +23,8 @@ predictUorfs <- function(tissues = readTable("tissues_RiboSeq")[[1]],
     hits <- as.logical(prediction[,3] > 0.50)
     uORFomePipe:::startCodonMetrics(hits)
     saveRDS(prediction, file = p("prediction_model/prediction_", tissue, ".rds"))
-
   }
+  h2o::h2o.shutdown(prompt = FALSE)
   return(makeCombinedPrediction(tissues))
 }
 

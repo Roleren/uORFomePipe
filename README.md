@@ -82,7 +82,7 @@ if (!file.exists(paste0(experiment.dir, exp.name.RNA, ".csv"))) { # Do this only
 
 
 # Preparing NGS data and annotation as ORFik experiment
-Here we subset to only do analysis on 3 stages: fertilzed(2to4 cells stage), Dome and Shield.
+Here we subset to only do analysis on 3 stages: fertilized(2to4 cells stage), Dome and Shield.
 
 You need to set these parameters in the orfikDirs function:
 1. mainPath: the directory to use for uORFomePipe results
@@ -95,11 +95,11 @@ You need to set these parameters in the orfikDirs function:
 { # This part will vary according to what your experiments looks like, here I pick 3 stages to use
   # Load experiments
   df.cage <- read.experiment(paste0(experiment.dir, exp.name.CAGE))
-  df.rfp  <- read.experiment(paste0(experiment.dir, exp.name.RFP)) # RNA-seq is optional, but makes results better
+  df.rfp  <- read.experiment(paste0(experiment.dir, exp.name.RFP))
   df.rna  <- read.experiment(paste0(experiment.dir, exp.name.RNA))
   # Subset experiments to stages / tissues we want analysed (they must exist in all 3)
   conditions <- c("", NA) # Only empty conditions allowed (no mutants etc.)
-  stages <- c("Dome","Shield", "2to4Cell", "fertilized") # 3 stages (we make 2to4 and fertilzed as 1 stage)
+  stages <- c("Dome","Shield", "2to4Cell", "fertilized") # 3 stages (we make 2to4 and fertilized as 1 stage)
   df.rfp <- df.rfp[df.rfp$stage %in% stages & df.rfp$condition %in% conditions,]
   df.rna <- df.rna[df.rna$stage %in% stages & df.rna$condition %in% conditions,]
   df.cage <- df.cage[df.cage$stage %in% stages & df.cage$condition %in% conditions,]; df.cage[1,2] <- df.rna$stage[1]

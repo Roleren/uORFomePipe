@@ -12,11 +12,11 @@ readTable(
 )
 }
 \arguments{
-\item{tableName}{name of table in sql}
+\item{tableName}{name of table in sql database}
 
 \item{asGR}{convert to GRanges}
 
-\item{with.IDs}{include ID column}
+\item{with.IDs}{include ID column (remove to make calculations easier)}
 }
 \value{
 the table as data.table or GRanges

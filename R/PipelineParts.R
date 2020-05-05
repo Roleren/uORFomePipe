@@ -90,7 +90,7 @@ createCatalogueDB <- function(df.cage,
 #' Step 5 of uORFome pipeline
 #' @export
 makeTrainingAndPredictionData <- function(df.rfp, df.rna,
-                                          organism = get("biomart_dataset", mode = "character", envir = .GlobalEnv),
+                                          organism = get("organism", mode = "character", envir = .GlobalEnv),
                                           biomart = get("biomart_dataset", mode = "character", envir = .GlobalEnv)) {
   # first sequence features
   getSequenceFeatures(organism, biomart)

@@ -61,8 +61,13 @@ strongCDS <- function(coverage, fpkm, startCodonCoverage, fiveRegionRelative) {
   return(filter)
 }
 
-# Get only specific tissues, or all.
-# Grouped by rowMeans
+#' Get specific feature for specific tissues
+#'
+#' Grouped by rowMeans
+#' @param tableName name of table in sql database
+#' @param tissue
+#' @importFrom data.table data.table
+#' @return data.table of row mean values by tissue
 getTissueFromFeatureTable <- function(tableName, tissue) {
   if (tableNotExists(tableName)) stop(paste("table does not exist:",
                                             tableName))

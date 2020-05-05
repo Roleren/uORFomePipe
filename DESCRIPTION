@@ -8,6 +8,7 @@ Description: Prediction of uORFs in varying tissues / stages,
   using the ORFik package as back-end and the presumption that active / translated 
   uORFs should have similar Ribo-seq patterns to (coding sequences) CDS'.
   Uses a Random forrest (from H2o.ai) trained on Ribo-seq features.
+biocViews: ImmunoOncology, Software, Sequencing, RiboSeq, RNASeq, FunctionalGenomics, Coverage, Alignment, DataImport
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true

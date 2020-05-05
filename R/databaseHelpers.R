@@ -1,9 +1,18 @@
 #' Create the database for uORFome
+#'
+#' Will assing to .GlobalEnv
+#' @param name full path name of database, existing or fresh.
+#' @return invisible(NULL)
 createDataBase <- function(name){
   uorfDB <- dbConnect(RSQLite::SQLite(), name)
   assign(x = "uorfDB", uorfDB, envir = .GlobalEnv)
+  return(invisible(NULL))
 }
 
+#' Delete the database for uORFome
+#'
+#' Will assing to .GlobalEnv
+#' @param name full path name of database, existing or fresh.
 deleteDataBase <- function(name, uorfDB = get("uorfDB", envir = .GlobalEnv)){
   dbDisconnect(uorfDB)
   unlink(name)
@@ -19,15 +28,16 @@ insertTable <- function(Matrix, tableName, appends = F, rmOld = F,
 }
 
 #' Read a table from the database
-#' @param tableName name of table in sql
+#' @param tableName name of table in sql database
 #' @param asGR convert to GRanges
-#' @param with.IDs include ID column
+#' @param with.IDs include ID column (remove to make calculations easier)
 #' @return the table as data.table or GRanges
+#' @importFrom data.table as.data.table
 #' @export
 readTable <- function(tableName, asGR = FALSE, with.IDs = TRUE,
                       uorfDB = get("uorfDB", envir = .GlobalEnv)) {
   if (asGR){
-    grl <- as.data.table(dbReadTable(uorfDB,tableName))
+    grl <- as.data.table(dbReadTable(uorfDB, tableName))
     return(makeGRangesListFromDataFrame(grl, split.field = "group",
                                         names.field = "group_name",
                                         keep.extra.columns = TRUE))
