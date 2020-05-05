@@ -6,6 +6,12 @@
 \usage{
 linkORFsToTx(dataFolder)
 }
+\arguments{
+\item{dataFolder}{dataFolder with helper objects}
+}
+\value{
+return(invisible(NULL))
+}
 \description{
 Given orfs and transcripts, find all transcripts the orfs are within
 and name them by this. Also the second orf in

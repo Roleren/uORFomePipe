@@ -1,4 +1,9 @@
 #' Make a leader that spans the max leader per transcript by cage files
+#' @param leadersFolder folder with CAGE leaders
+#' @param dataFolder dataFolder with helper objects
+#' @importFrom BiocParallel bplapply
+#' @importFrom GenomicRanges start
+#' @return return(invisible(NULL))
 allLeadersSpanningLeader <- function(leadersFolder, dataFolder){
   message("Creating merged leader")
   leadersList = list.files(leadersFolder, full.names = TRUE)
@@ -54,7 +59,7 @@ allLeadersSpanningLeader <- function(leadersFolder, dataFolder){
   getCDS()
   CageFiveWithCDS <- ORFik:::addCdsOnLeaderEnds(fTot, cds)
   saveRDS(CageFiveWithCDS, file = p(dataFolder, "/CageFiveUTRsWithCDS.rds"))
-  return(NULL)
+  return(invisible(NULL))
 }
 
 
@@ -62,6 +67,8 @@ allLeadersSpanningLeader <- function(leadersFolder, dataFolder){
 #'
 #' Given orfs and transcripts, find all transcripts the orfs are within
 #' and name them by this. Also the second orf in
+#' @param dataFolder dataFolder with helper objects
+#' @return return(invisible(NULL))
 linkORFsToTx <- function(dataFolder){
   if (!file.exists(p(dataFolder,"/uniqueUorfsAsGRWithTx.rdata"))) {
     message("Linking ORFs to transcripts")
@@ -100,5 +107,5 @@ linkORFsToTx <- function(dataFolder){
   } else {
     message("linkORFsToTx already exist, skipping remake of them")
   }
-  return(NULL)
+  return(invisible(NULL))
 }

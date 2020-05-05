@@ -3,7 +3,9 @@ Type: Package
 Title: uORF prediction in R
 Version: 0.1.0
 Author: Hakon Tjeldnes
-Maintainer: The package maintainer <hakon.tjeldnes@uib.no>
+Authors@R: c(
+  person(given = "Haakon", family = "Tjeldnes", email = "hauken_heyken@hotmail.com", role = c("aut", "cre", "dtc")),
+  person(given = "Evind", family = "Valen", email = "eivind.valen@gmail.com", role = c("ths", "fnd")))
 Description: Prediction of uORFs in varying tissues / stages,
   using the ORFik package as back-end and the presumption that active / translated 
   uORFs should have similar Ribo-seq patterns to (coding sequences) CDS'.

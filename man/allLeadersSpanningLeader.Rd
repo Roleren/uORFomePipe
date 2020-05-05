@@ -6,6 +6,14 @@
 \usage{
 allLeadersSpanningLeader(leadersFolder, dataFolder)
 }
+\arguments{
+\item{leadersFolder}{folder with CAGE leaders}
+
+\item{dataFolder}{dataFolder with helper objects}
+}
+\value{
+return(invisible(NULL))
+}
 \description{
 Make a leader that spans the max leader per transcript by cage files
 }

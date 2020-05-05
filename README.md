@@ -26,10 +26,10 @@ if (requireNamespace("devtools")) {
   if (requireNamespace("uORFomePipe")) {
     library(uORFomePipe)
   } else {
-    devtools::install_github("Roleren/uORFomePipe", dependencies = TRUE); quit(save = "n")
+    devtools::install_github("Roleren/uORFomePipe", dependencies = TRUE); quit(save = "no")
   }
 } else {
-  install.packages("devtools"); quit(save = "n")
+  install.packages("devtools"); quit(save = "no")
 }
 ```  
 
