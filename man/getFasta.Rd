@@ -4,7 +4,7 @@
 \alias{getFasta}
 \title{Get the fasta indexed file}
 \usage{
-getFasta(filePath = NULL, assignIt = T)
+getFasta(filePath = NULL, assignIt = TRUE)
 }
 \description{
 if assignIt is TRUE, the object is not return to local scope

@@ -8,6 +8,12 @@ deleteDataBase(name, uorfDB = get("uorfDB", envir = .GlobalEnv))
 }
 \arguments{
 \item{name}{full path name of database, existing or fresh.}
+
+\item{uorfDB}{the defined uORFome sql database, default:
+get("uorfDB", envir = .GlobalEnv)}
+}
+\value{
+invisible(NULL)
 }
 \description{
 Will assing to .GlobalEnv

@@ -178,8 +178,7 @@ predictive power.
 # 7. Predict uORFs
 #¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
 # Either split tissues, or use argument "all" for all combined
-prediction <- predictUorfs(tissues = "all",
-                           nthreads_h2o = max(45, detectCores()/3))
+prediction <- predictUorfs()
 ```
 # Analysis
 Here you can do analysis, some predefined analysis function are included, you can work on the results 
@@ -192,7 +191,7 @@ as you want.
 predictionVsCageHits()
 
 # Feature analysis
-featureAnalysis(prediction, tissue = "all")
+featureAnalysis(prediction, tissue = "combined")
 ```  
 
 ![uORF analysis](inst/extdata/analysis_plot.png)

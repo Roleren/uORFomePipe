@@ -26,5 +26,6 @@ Imports:
   biomaRt,
   biomartr,
   gridExtra,
-  VennDiagram
+  VennDiagram, 
+  BiocParallel
 RoxygenNote: 7.1.0

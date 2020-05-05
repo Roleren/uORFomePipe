@@ -9,6 +9,15 @@ getAllUORFData(
   stringsAsFactors = TRUE
 )
 }
+\arguments{
+\item{prediction}{Which prediction to use, default:
+prediction = readTable("finalPredWithProb"}
+
+\item{stringsAsFactors}{TRUE}
+}
+\value{
+data.table of prediction, NGS features and sequence features
+}
 \description{
 Get all data for combined dataset
 }

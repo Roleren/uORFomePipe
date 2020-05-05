@@ -8,6 +8,8 @@ getTissueFromFeatureTable(tableName, tissue)
 }
 \arguments{
 \item{tableName}{name of table in sql database}
+
+\item{tissue}{character, single tissue}
 }
 \value{
 data.table of row mean values by tissue

@@ -4,7 +4,19 @@
 \alias{strongCDS}
 \title{strongCDS}
 \usage{
-strongCDS(coverage, fpkm, startCodonCoverage, fiveRegionRelative)
+strongCDS(coverage, fpkm, startCodonCoverage, startRegionRelative)
+}
+\arguments{
+\item{coverage}{(counts over region)}
+
+\item{fpkm}{FPKM value of region}
+
+\item{startCodonCoverage}{(Coverage of startcodon +/- 1 base region)}
+
+\item{startRegionRelative}{Relative coverage of start region to upstream short region}
+}
+\value{
+logical TRUE/FALSE per row
 }
 \description{
 A filter to say if a CDS has strong indication of translation, used as strong positives

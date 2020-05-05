@@ -12,25 +12,40 @@ createDataBase <- function(name){
 #' Delete the database for uORFome
 #'
 #' Will assing to .GlobalEnv
-#' @param name full path name of database, existing or fresh.
+#' @inheritParams createDataBase
+#' @param uorfDB the defined uORFome sql database, default:
+#' get("uorfDB", envir = .GlobalEnv)
+#' @return invisible(NULL)
 deleteDataBase <- function(name, uorfDB = get("uorfDB", envir = .GlobalEnv)){
   dbDisconnect(uorfDB)
   unlink(name)
+  return(invisible(NULL))
 }
 
-insertTable <- function(Matrix, tableName, appends = F, rmOld = F,
+#' Delete the database for uORFome
+#'
+#' Will assing to .GlobalEnv
+#' @param Matrix the data.table / matrix to insert
+#' @inheritParams readTable
+#' @param appends rowbind instead of insert
+#' @param rmOld  (TRUE) allow replacing existing table (if TRUE)
+#' @return invisible(NULL)
+insertTable <- function(Matrix, tableName, appends = FALSE, rmOld = FALSE,
                         uorfDB = get("uorfDB", envir = .GlobalEnv)){
   if (rmOld){
     if(!tableNotExists(tableName))
       deleteTable(tableName)
   }
   dbWriteTable(uorfDB, tableName, as.data.table(Matrix),append = appends)
+  return(invisible(NULL))
 }
 
 #' Read a table from the database
 #' @param tableName name of table in sql database
 #' @param asGR convert to GRanges
 #' @param with.IDs include ID column (remove to make calculations easier)
+#' @param uorfDB the defined uORFome sql database, default:
+#' get("uorfDB", envir = .GlobalEnv)
 #' @return the table as data.table or GRanges
 #' @importFrom data.table as.data.table
 #' @export
@@ -53,11 +68,17 @@ readTable <- function(tableName, asGR = FALSE, with.IDs = TRUE,
 }
 
 #' List current tables in database
+#' @inheritParams deleteDataBase
 #' @export
 listTables <- function(uorfDB = get("uorfDB", envir = .GlobalEnv)){
   sort(dbListTables(uorfDB))
 }
 
+#' Does table exist
+#' @inheritParams readTable
+#' @param name Table name
+#' @param exact (TRUE), if FALSE do "grep" search instead
+#' @return logical (TRUE if not exists)
 tableNotExists <- function(name, exact = TRUE,
                            uorfDB = get("uorfDB", envir = .GlobalEnv)){
   if (exact) return(sum(name %in% listTables()) == 0)
@@ -65,6 +86,9 @@ tableNotExists <- function(name, exact = TRUE,
   return(sum(grep(pattern = name, x = listTables())) == 0)
 }
 
+#' Delete single sql table
+#'
+#' @inheritParams readTable
 deleteTable = function(tableName, uorfDB = get("uorfDB", envir = .GlobalEnv)){
   if (!tableNotExists(tableName)) { dbRemoveTable(uorfDB,tableName)
   } else { print(paste(tableName, "is not a table in the uORF database"))

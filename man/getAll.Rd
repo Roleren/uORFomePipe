@@ -5,12 +5,12 @@
 \title{Get all annotation parts
 leader, cds, threeUTRs and tx}
 \usage{
-getAll(include.cage = T, cdsOnFiveEnd = F)
+getAll(include.cage = TRUE, cdsOnFiveEnd = FALSE)
 }
 \arguments{
-\item{include.cage}{logical T}
+\item{include.cage}{logical TRUE}
 
-\item{cdsOnFiveEnd}{logical F}
+\item{cdsOnFiveEnd}{logical FALSE}
 }
 \description{
 Get all annotation parts

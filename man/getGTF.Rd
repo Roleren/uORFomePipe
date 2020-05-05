@@ -6,6 +6,9 @@
 \usage{
 getGTF(assignIt = TRUE)
 }
+\arguments{
+\item{assignIt}{TRUE (assign to .GlobalEnv)}
+}
 \description{
 Get the Genomic transcript format, currently using GRch38 data
 }

@@ -72,26 +72,6 @@ featureAnalysis <- function(prediction, tissue = "all"){
   return(invisible(NULL))
 }
 
-# Some statistics from prediction you can use
-
-#' Find AGG uORFs predicted to be functional
-#'
-#' Look these up in IGV and check why they are predicted
-checkTopPred <- function(tissue = "all"){
-  # load(paste0("forests/prediction_", "all", ".rdata"))
-  load(paste0("prediction_model/finalPrediction_filtered",tissue, ".rdata"))
-  uorfData <- getAllSequenceFeaturesTable()
-  uorfTable <- uORFomePipe:::makeORFPredictionData()
-  grl <- getUorfsInDb()
-  index <- which(uorfTable$startCodonPerGroupBest & uorfData$StartCodons == "AGG" & prediction$p1 >= 0.50)
-  t <- 18
-  for(i in index[t:(t+2)]){
-    print(uorfData[i,])
-    print(uorfTable[i,])
-    print(grl[i])
-  }
-}
-
 checkBadPred <- function(){
   # region check
   uorfData <- getAllSequenceFeaturesTable()
@@ -117,6 +97,9 @@ checkBadPred <- function(){
   toKeep <- which(agg)[index]
 }
 
+#' Classification bounaries
+#'
+#' @param tissues the tissues wanted to check
 findClassificationBoundary <- function(tissues){
   x <- seq(0, 1, 0.1)[2:10]
   # for riboseq prediction

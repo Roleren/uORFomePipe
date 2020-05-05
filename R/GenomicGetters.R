@@ -1,6 +1,7 @@
 # These functions are used the speed up loading of annotation in parallel loops
 
 #' Get the Genomic transcript format, currently using GRch38 data
+#' @param assignIt TRUE (assign to .GlobalEnv)
 getGTF <- function(assignIt = TRUE) {
   if(exists("Gtf", mode = "S4") == FALSE) {
     Gtf = loadTxdb(gtfdb)
@@ -13,6 +14,8 @@ getGTF <- function(assignIt = TRUE) {
 }
 
 #' Get transcripts from gtf
+#' @inheritParams getGTF
+#' @param dataFolder default: get("dataFolder", envir = .GlobalEnv)
 getTx <- function(assignIt = TRUE,
                   dataFolder = get("dataFolder", envir = .GlobalEnv)){
   if (exists("tx", mode = "S4") == FALSE) {
@@ -31,7 +34,8 @@ getTx <- function(assignIt = TRUE,
   }
 }
 
-#Get the coding sequences from the gtf file
+#' Get the coding sequences from the gtf file
+#' @inheritParams getTx
 getCDS <- function(assignIt = TRUE,
                    dataFolder = get("dataFolder", envir = .GlobalEnv)) {
   if (exists("cds", mode = "S4") == FALSE) {
@@ -50,7 +54,8 @@ getCDS <- function(assignIt = TRUE,
   }
 }
 
-#Get the 3' sequences from the gtf file
+#' Get the 3' sequences from the gtf file
+#' @inheritParams getTx
 getThreeUTRs <- function(dataFolder = get("dataFolder", envir = .GlobalEnv)){
   if (!exists("threeUTRs", mode = "S4")) {
     if (!file.exists(p(dataFolder, "/threeUTRs.rds"))) {
@@ -64,6 +69,7 @@ getThreeUTRs <- function(dataFolder = get("dataFolder", envir = .GlobalEnv)){
 }
 
 #' Get the 5' leaders
+#' @inheritParams getTx
 getLeaders <- function(assignIt = TRUE,
                        dataFolder = get("dataFolder", envir = .GlobalEnv)) {
   if(exists("fiveUTRs", mode = "S4") == FALSE) {
@@ -76,6 +82,9 @@ getLeaders <- function(assignIt = TRUE,
   return(invisible(NULL))
 }
 
+#' Get maximum spanning CAGE leaders
+#'
+#' Ensures to span all candidate uORFs found
 leaderCage <- function(with.cds = TRUE){
   if(with.cds)
     return(readRDS(p(dataFolder,"/CageFiveUTRsWithCDS.rds")))
@@ -86,7 +95,7 @@ leaderCage <- function(with.cds = TRUE){
 #'
 #' if assignIt is TRUE, the object is not return to local scope
 #' Only assigned to globalenvir
-getFasta = function(filePath = NULL, assignIt = T){
+getFasta = function(filePath = NULL, assignIt = TRUE){
   if(exists("fa", mode = "S4") == FALSE){ #index files
     if (is.null(filePath)){
       fa = FaFile(faiName)
@@ -103,10 +112,10 @@ getFasta = function(filePath = NULL, assignIt = T){
 
 #' Get all annotation parts
 #' leader, cds, threeUTRs and tx
-#' @param include.cage logical T
-#' @param cdsOnFiveEnd logical F
+#' @param include.cage logical TRUE
+#' @param cdsOnFiveEnd logical FALSE
 #' @export
-getAll <- function(include.cage = T, cdsOnFiveEnd = F){
+getAll <- function(include.cage = TRUE, cdsOnFiveEnd = FALSE){
   getFasta()
   getLeaders(); getCDS(); getThreeUTRs()
   #or with extension
@@ -136,6 +145,7 @@ getCageTx <- function() {
 }
 
 #' Used as negative set for training
+#'
 #' Defined as stop site of 3' UTRs that has width >= 6,
 #' and extend in direction of downstream direction the median
 #' distance of 3' UTRs.

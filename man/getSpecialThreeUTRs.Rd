@@ -2,15 +2,11 @@
 % Please edit documentation in R/GenomicGetters.R
 \name{getSpecialThreeUTRs}
 \alias{getSpecialThreeUTRs}
-\title{Used as negative set for training
-Defined as stop site of 3' UTRs that has width >= 6,
-and extend in direction of downstream direction the median
-distance of 3' UTRs.}
+\title{Used as negative set for training}
 \usage{
 getSpecialThreeUTRs()
 }
 \description{
-Used as negative set for training
 Defined as stop site of 3' UTRs that has width >= 6,
 and extend in direction of downstream direction the median
 distance of 3' UTRs.

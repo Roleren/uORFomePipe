@@ -6,6 +6,11 @@
 \usage{
 getLeaders(assignIt = TRUE, dataFolder = get("dataFolder", envir = .GlobalEnv))
 }
+\arguments{
+\item{assignIt}{TRUE (assign to .GlobalEnv)}
+
+\item{dataFolder}{default: get("dataFolder", envir = .GlobalEnv)}
+}
 \description{
 Get the 5' leaders
 }
