@@ -1,16 +1,20 @@
 #' Predict uORFs using random forrest classification
 #'
 #' Training data
-#' pos set is by cds
-#' Neg seg is by 3'utrs
+#' pos set is by CDS (coding sequences)
+#' Neg seg is by trailers (3'UTRs)
 #'
 #' @param tissues Tissues to train on, default (readTable("tissues_RiboSeq")[[1]]),
 #'  use "combined" if only you want all in one
+#' @param ip h2o cluster ip, default: "localhost".
+#' @param port h2o cluster port, default: 54321
 #' @param nthreads_h2o number of cores for H20: default max(45, detectCores()/2)
 #' @param max_mem_size max allowed memory for H20: default ("200G")
 #' @export
 #' @import h2o
 predictUorfs <- function(tissues = readTable("tissues_RiboSeq")[[1]],
+                         ip = "localhost",
+                         port = 54321,
                          nthreads_h2o = min(45, as.integer(detectCores()/2)),
                          max_mem_size = "200G") {
   for (tissue in tissues) {
@@ -18,8 +22,9 @@ predictUorfs <- function(tissues = readTable("tissues_RiboSeq")[[1]],
     # make uORFTable
     if(file.exists(paste0("prediction_model/prediction_", tissue, ".rds"))) next
 
-    forestRibo <- trainClassifier(tissue, nthreads_h2o, max_mem_size)
-    prediction <- as.data.table(h2o.predict(forestRibo, as.h2o(makeORFPredictionData(tissue))))
+    training_model <- trainClassifier(tissue, ip, port, nthreads_h2o, max_mem_size)
+    # Use training model from cds and trailers to predict on ORF prediction data (uORFs)
+    prediction <- as.data.table(h2o.predict(training_model, as.h2o(makeORFPredictionData(tissue))))
     hits <- as.logical(prediction[,3] > 0.50)
     uORFomePipe:::startCodonMetrics(hits)
     saveRDS(prediction, file = p("prediction_model/prediction_", tissue, ".rds"))
@@ -30,7 +35,12 @@ predictUorfs <- function(tissues = readTable("tissues_RiboSeq")[[1]],
 
 #' The training model with cds and 3' UTRs as random forest
 #' @param tissue Tissues to train on, use "combined" if you want all in one
-trainClassifier <- function(tissue, nthreads, max_mem_size) {
+#' @inheritParams predictUorfs
+trainClassifier <- function(tissue,
+                            ip = "localhost",
+                            port = 54321,
+                            nthreads_h2o = min(45, as.integer(detectCores()/2)),
+                            max_mem_size = "200G") {
 
   if(file.exists(paste0("prediction_model/randomForrest_",tissue))) {
     forrest <- h2o.loadModel(path = p("prediction_model/randomForrest_",tissue,"/",
@@ -39,7 +49,8 @@ trainClassifier <- function(tissue, nthreads, max_mem_size) {
   }
   # define training control
   training <- makeTrainingData(tissue)
-  forrest <- forest(training, ntrees = 100, nthreads = nthreads, max_mem_size = max_mem_size)
+  forrest <- forest(training, ntrees = 100, ip = ip, port = port,
+                    nthreads_h2o = nthreads_h2o, max_mem_size = max_mem_size)
   if (!is.null(tissue)) {
     h2o.saveModel(forrest, path = p("prediction_model/randomForrest_",tissue))
   }

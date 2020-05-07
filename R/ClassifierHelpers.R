@@ -1,8 +1,12 @@
 #' Train h2o rf model.
 #' negDT if you want own samples for that
+#' @param dt data.table of features to train on
+#' @param cv number of cross validations, default 10
+#' @inheritParams predictUorfs
 #' @import h2o
-forest <- function(dt, cv = 10, ntrees = 64, nthreads = 40,  max_mem_size = "200G"){
-  h2o.init(nthreads = nthreads, max_mem_size = max_mem_size, port = 20050)
+forest <- function(dt, cv = 10, ntrees = 64, ip,
+                   port, nthreads_h2o,  max_mem_size){
+  h2o.init(ip = ip, port = port, nthreads = nthreads_h2o, max_mem_size = max_mem_size)
   # new h2o model training
   indices <- sample(1:nrow(dt), 0.6*nrow(dt), replace = F)
   validationIndices <- seq.int(nrow(dt))[-indices]
@@ -62,7 +66,7 @@ makeCombinedPrediction <- function(tissues, dataFolder = get("dataFolder", envir
 #' @return logical TRUE/FALSE per row
 strongCDS <- function(coverage, fpkm, startCodonCoverage, startRegionRelative) {
   filter <- (coverage > min(quantile(coverage, 0.25), 10)) & (fpkm > quantile(fpkm, 0.15)) &
-    (startCodonCoverage > quantile(startCodonCoverage, 0.75)) & fiveRegionRelative > 0.95
+    (startCodonCoverage > quantile(startCodonCoverage, 0.75)) & startRegionRelative > 0.95
   return(filter)
 }
 

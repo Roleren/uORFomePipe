@@ -3,6 +3,9 @@
 #' Make directoy structure for orf finding
 #' The main Path is ./.. relative to RCode1/ location
 #' @param mainPath folder for uORFome to put results
+#' @param df.rfp ORFik experiment of Ribo-seq
+#' @param df.rna ORFik experiment of RNA-seq
+#' @param df.cage ORFik experiment of CAGE
 #' @param dataFolder ORFik experiment that contains Annotation
 #' @param makeDatabase default FALSE, set to TRUE if you want
 #' to predict translated uORFs
@@ -15,6 +18,7 @@
 #' @export
 orfikDirs <- function(mainPath, df.rfp, df.rna, df.cage,
                       organism, biomart = "not_decided") {
+  dir.create(mainPath, showWarnings = FALSE, recursive = TRUE)
   setwd(mainPath)
   message("Welcome, setting up uORFome folders\n")
   message(p("Registered organism is: ", organism))
@@ -118,6 +122,8 @@ orfikDirs <- function(mainPath, df.rfp, df.rna, df.cage,
   return(invisible(NULL))
 }
 
+#' Validation of experiments
+#' @inheritParams orfikDirs
 validateInputs <- function(df.rfp, df.rna, df.cage) {
   samples.rfp <- nrow(df.rfp);samples.rna <- nrow(df.rna)
   if (samples.rfp != samples.rna) stop("Not equal samples in RNA-seq and Ribo-seq")

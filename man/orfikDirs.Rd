@@ -9,6 +9,12 @@ orfikDirs(mainPath, df.rfp, df.rna, df.cage, organism, biomart = "not_decided")
 \arguments{
 \item{mainPath}{folder for uORFome to put results}
 
+\item{df.rfp}{ORFik experiment of Ribo-seq}
+
+\item{df.rna}{ORFik experiment of RNA-seq}
+
+\item{df.cage}{ORFik experiment of CAGE}
+
 \item{organism}{scientific name of organism,
 like Homo sapiens, Danio rerio, etc.}
 

@@ -4,10 +4,24 @@
 \alias{trainClassifier}
 \title{The training model with cds and 3' UTRs as random forest}
 \usage{
-trainClassifier(tissue, nthreads, max_mem_size)
+trainClassifier(
+  tissue,
+  ip = "localhost",
+  port = 54321,
+  nthreads_h2o = min(45, as.integer(detectCores()/2)),
+  max_mem_size = "200G"
+)
 }
 \arguments{
 \item{tissue}{Tissues to train on, use "combined" if you want all in one}
+
+\item{ip}{h2o cluster ip, default: "localhost".}
+
+\item{port}{h2o cluster port, default: 54321}
+
+\item{nthreads_h2o}{number of cores for H20: default max(45, detectCores()/2)}
+
+\item{max_mem_size}{max allowed memory for H20: default ("200G")}
 }
 \description{
 The training model with cds and 3' UTRs as random forest

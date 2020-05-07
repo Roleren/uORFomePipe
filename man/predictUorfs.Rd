@@ -6,6 +6,8 @@
 \usage{
 predictUorfs(
   tissues = readTable("tissues_RiboSeq")[[1]],
+  ip = "localhost",
+  port = 54321,
   nthreads_h2o = min(45, as.integer(detectCores()/2)),
   max_mem_size = "200G"
 )
@@ -14,12 +16,16 @@ predictUorfs(
 \item{tissues}{Tissues to train on, default (readTable("tissues_RiboSeq")[[1]]),
 use "combined" if only you want all in one}
 
+\item{ip}{h2o cluster ip, default: "localhost".}
+
+\item{port}{h2o cluster port, default: 54321}
+
 \item{nthreads_h2o}{number of cores for H20: default max(45, detectCores()/2)}
 
 \item{max_mem_size}{max allowed memory for H20: default ("200G")}
 }
 \description{
 Training data
-pos set is by cds
-Neg seg is by 3'utrs
+pos set is by CDS (coding sequences)
+Neg seg is by trailers (3'UTRs)
 }

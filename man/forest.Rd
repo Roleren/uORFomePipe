@@ -5,7 +5,20 @@
 \title{Train h2o rf model.
 negDT if you want own samples for that}
 \usage{
-forest(dt, cv = 10, ntrees = 64, nthreads = 40, max_mem_size = "200G")
+forest(dt, cv = 10, ntrees = 64, ip, port, nthreads_h2o, max_mem_size)
+}
+\arguments{
+\item{dt}{data.table of features to train on}
+
+\item{cv}{number of cross validations, default 10}
+
+\item{ip}{h2o cluster ip, default: "localhost".}
+
+\item{port}{h2o cluster port, default: 54321}
+
+\item{nthreads_h2o}{number of cores for H20: default max(45, detectCores()/2)}
+
+\item{max_mem_size}{max allowed memory for H20: default ("200G")}
 }
 \description{
 Train h2o rf model.
