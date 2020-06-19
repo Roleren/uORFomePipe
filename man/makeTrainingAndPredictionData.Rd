@@ -8,7 +8,9 @@ makeTrainingAndPredictionData(
   df.rfp,
   df.rna,
   organism = get("organism", mode = "character", envir = .GlobalEnv),
-  biomart = get("biomart_dataset", mode = "character", envir = .GlobalEnv)
+  biomart = get("biomart_dataset", mode = "character", envir = .GlobalEnv),
+  orfs = uORFomePipe:::getUorfsInDb(),
+  mode = "uORF"
 )
 }
 \description{

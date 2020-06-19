@@ -4,7 +4,7 @@
 \alias{featureAnalysis}
 \title{General feature analysis}
 \usage{
-featureAnalysis(prediction, tissue = "all")
+featureAnalysis(prediction, tissue)
 }
 \arguments{
 \item{prediction}{a data.table, 3 columns: (prediction, p0 and p1).

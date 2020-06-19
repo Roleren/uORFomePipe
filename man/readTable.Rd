@@ -25,5 +25,6 @@ get("uorfDB", envir = .GlobalEnv)}
 the table as data.table or GRanges
 }
 \description{
-Read a table from the database
+Note: Because of SQL naming, any table you defined that has column names
+starting with X, then a number directly afterwards, will lose the X.
 }

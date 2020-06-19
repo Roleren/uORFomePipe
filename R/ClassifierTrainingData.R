@@ -1,21 +1,20 @@
 #' Get CDS and 3'UTR TrainingData of ribo seq features
 #'
 #' Positive set is cds, negative is downstream region of 3' UTRs
-#' @param tissue Tissue to train on, use "combined" if you want all in one
+#' @param tissue Tissue to train on, use "combined" if you want all in one,
+#' first run of training it is a ORFik experiment.
 #' @param features features to train model on, must exist in database
+#' @return invisible(NULL), saved to disc
 makeTrainingData <- function(tissues = "combined",
                              features = c("countRFP", "disengagementScores", "entropyRFP", "startRegionCoverage","startRegionRelative",
                                           "floss", "ioScore", "ORFScores","fpkmRFP", "RRS", "RSS", "startCodonCoverage")) {
-
-  if (is(tissues, "experiment")) {
-    tissues <- c(unique(tissues$stage), "combined")
-    if (tableNotExists("tissues_RiboSeq")) insertTable(tissues, "tissues_RiboSeq")
-  }
   if (length(tissues) == 1) {
     if (file.exists(paste0("features/TrainingData_",tissues,".rds"))) {
       return(readRDS(paste0("features/TrainingData_",tissues,".rds")))
     }
-  }
+  } else if (is(tissues, "experiment")) tissues <- readTable("experiment_groups")[[1]]
+
+
   for (tissue in tissues) {
     if (file.exists(paste0("features/TrainingData_",tissue,".rds"))) next
     posFeatureNames <- grep(pattern = p("cds", features, collapse = "|"), x = listTables(), value = TRUE)
@@ -83,7 +82,7 @@ makeTrainingData <- function(tissues = "combined",
 makeORFPredictionData <- function(tissues = "combined",
                                   features = c("countRFP", "disengagementScores", "entropyRFP", "startRegionCoverage","startRegionRelative",
                                                "floss", "ioScore", "ORFScores","fpkmRFP", "RRS", "RSS", "startCodonCoverage")) {
-  if (is(tissues, "experiment")) tissues <- c(unique(tissues$stage), "combined")
+  if (is(tissues, "experiment")) tissues <- unique(tissues$stage)
   if (length(tissues) == 1) {
     if(file.exists(paste0("features/PredictionData_",tissues,".rds"))) {
       return(readRDS(paste0("features/PredictionData_",tissues,".rds")))

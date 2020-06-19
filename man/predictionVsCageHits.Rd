@@ -4,11 +4,16 @@
 \alias{predictionVsCageHits}
 \title{Plot top tissues}
 \usage{
-predictionVsCageHits(saveName = "differential_uORF_usage")
+predictionVsCageHits(saveName = "differential_uORF_usage.png", mode = "uORF")
 }
 \arguments{
-\item{saveName}{full name of location to save to, will save as png}
+\item{saveName}{full name of location to save to, default
+"differential_uORF_usage.png"}
+
+\item{mode}{character, default: "uORF". alternative "ORF" or what ever
+region you are checking.}
 }
 \description{
-Shows max 20 tissues
+Shows max 20 tissues candidate and predicted uORF counts
+And start and stop codon usage for combined prediction
 }

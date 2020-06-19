@@ -4,10 +4,14 @@
 \alias{getLeadersFromCage}
 \title{Reassign leaders by CAGE}
 \usage{
-getLeadersFromCage(cageFiles, BPPARAM = bpparam())
+getLeadersFromCage(cageFiles, filterValue = 3, BPPARAM = bpparam())
 }
 \arguments{
 \item{cageFiles}{a ORFik experiment with CAGE files and annotation}
+
+\item{filterValue}{The minimum number of reads on cage position, for it to
+be counted as possible new tss. (represented in score column in
+CageSeq data) If you already filtered, set it to 0.}
 }
 \value{
 uORFs search region (CAGE leaders + CDS)

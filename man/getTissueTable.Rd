@@ -9,6 +9,11 @@ must include uORF to be a hit.}
 \usage{
 getTissueTable(cageTable, dataFolder)
 }
+\arguments{
+\item{cageTable}{an ORFik experiment of cage, or NULL}
+
+\item{dataFolder}{a path to folder with data}
+}
 \description{
 Create tissueTable for cage, 1 row per unique uorf
 Tissue must have at least 2 CAGE libraries supporting the uORF

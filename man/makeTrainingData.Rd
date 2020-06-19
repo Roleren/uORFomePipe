@@ -14,7 +14,11 @@ makeTrainingData(
 \arguments{
 \item{features}{features to train model on, must exist in database}
 
-\item{tissue}{Tissue to train on, use "combined" if you want all in one}
+\item{tissue}{Tissue to train on, use "combined" if you want all in one,
+first run of training it is a ORFik experiment.}
+}
+\value{
+invisible(NULL), saved to disc
 }
 \description{
 Positive set is cds, negative is downstream region of 3' UTRs

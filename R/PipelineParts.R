@@ -2,14 +2,28 @@
 #'
 #' Step 1 of uORFome pipeline
 #' @param cageFiles a ORFik experiment with CAGE files and annotation
+#' @inheritParams ORFik::reassignTSSbyCage
 #' @return uORFs search region (CAGE leaders + CDS)
 #' @export
-getLeadersFromCage <- function(cageFiles, BPPARAM = bpparam()){
+getLeadersFromCage <- function(cageFiles, filterValue = 3,
+                               BPPARAM = bpparam()) {
   message("Starting to find uORF search spaces")
-  if (is(cageFiles, "experiment")) cageFiles <- filepath(cageFiles, "bedo")
   uORFomePipe:::getLeaders()
-  bplapply(cageFiles, FUN = function(cageName, dataFolder, leadersFolder, regionUORFsFolder) {
-    fiveUTRsCage <- reassignTSSbyCage(fiveUTRs, cageName, filterValue = 3)
+  if (is.null(cageFiles)) {
+    message("Running pipeline without CAGE data, set to NULL")
+    groups <- readTable("experiment_groups")[[1]]
+    uORFSearchRegion <- ORFik:::addCdsOnLeaderEnds(fiveUTRs, cds)
+    for(g in groups) {
+      saveRDS(fiveUTRs, file = paste0(leadersFolder, "_", g, ".leader.rds"))
+      saveRDS(uORFSearchRegion, file = paste0(regionUORFsFolder, "_", g, ".regionUORF.rds"))
+    }
+  }
+
+  if (is(cageFiles, "experiment")) cageFiles <- filepath(cageFiles, "bedo")
+
+  bplapply(cageFiles, FUN = function(cageName, dataFolder, leadersFolder,
+                                     regionUORFsFolder, filterValue) {
+    fiveUTRsCage <- reassignTSSbyCage(fiveUTRs, cageName, filterValue = filterValue)
     exportNamerdataLeader = paste0(leadersFolder, basename(p(cageName, ".leader.rds")))
     saveRDS(fiveUTRsCage, file = exportNamerdataLeader)
 
@@ -21,7 +35,8 @@ getLeadersFromCage <- function(cageFiles, BPPARAM = bpparam()){
 
   }, dataFolder = get("dataFolder", envir = .GlobalEnv),
   leadersFolder = get("leadersFolder", envir = .GlobalEnv),
-  regionUORFsFolder = get("regionUORFsFolder", envir = .GlobalEnv), BPPARAM = BPPARAM)
+  regionUORFsFolder = get("regionUORFsFolder", envir = .GlobalEnv),
+  filterValue = filterValue, BPPARAM = BPPARAM)
   message("finished new 5' UTRs and uORF search regions")
 }
 
@@ -91,12 +106,13 @@ createCatalogueDB <- function(df.cage,
 #' @export
 makeTrainingAndPredictionData <- function(df.rfp, df.rna,
                                           organism = get("organism", mode = "character", envir = .GlobalEnv),
-                                          biomart = get("biomart_dataset", mode = "character", envir = .GlobalEnv)) {
+                                          biomart = get("biomart_dataset", mode = "character", envir = .GlobalEnv),
+                                          orfs = uORFomePipe:::getUorfsInDb(), mode = "uORF") {
+  if (!(mode %in% c("uORF", "ORF"))) stop("mode must be uORF or ORF")
   # first sequence features
-  getSequenceFeatures(organism, biomart)
+  getSequenceFeatures(organism, biomart, orfs, mode = mode)
   # Ribo-seq features for ORFs
-  getGeneralRiboFeatures(df.rfp, df.rna,
-                         grl = uORFomePipe:::getUorfsInDb())
+  getGeneralRiboFeatures(df.rfp, df.rna, orfs)
   # Ribo-seq features for cds and 3'
   getCDS()
   getGeneralRiboFeatures(df.rfp, grl = cds[widthPerGroup(cds) > 5], preName = "cds")

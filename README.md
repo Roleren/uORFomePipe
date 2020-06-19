@@ -7,7 +7,9 @@ This package is still under development, although this version is stable and can
 
 
 uORFomePipe is a R package containing a prediction pipeline and analysis tools using Ribo-Seq, RNA-Seq and CAGE.
+Note that CAGE is optional, but will make you able to find uORFs outside the original gene annotation.
 
+Here are the main steps:
 - 1. set up parameters and experiment
 - 2. Find new cage leaders
 - 3. Find candidate uORFs (possible by sequence)
@@ -36,6 +38,7 @@ if (requireNamespace("devtools")) {
 #### Tutorial
 Here we show an example of predicting active uORFs between 3 stages in a zebrafish developmental timeline.
 For you to run, make a new script window in R and paste in the script at the bottom of the page. 
+Remember if you don't use CAGE, skip the steps and set CAGE to NULL
 
 # Preparing NGS data and annotation as ORFik experiment
 To prepare the Ribo-seq, RNA-seq and CAGE, we make the data into ORFik experiment.
@@ -45,7 +48,7 @@ First read about how ORFik experiment works:
 [ORFik experiment tutorial](https://bioconductor.org/packages/release/bioc/vignettes/ORFik/inst/doc/ORFikExperiment.html)
 
 Since we don't need most of the information in bam files, we create simplified libraries (bed files). And for Ribo-seq we p-shift
-the data.
+the data. Remember to skip the CAGE steps here if you don't have it.
 ```r
 library(uORFomePipe)
 #¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
@@ -94,10 +97,10 @@ You need to set these parameters in the orfikDirs function:
 #¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
 { # This part will vary according to what your experiments looks like, here I pick 3 stages to use
   # Load experiments
-  df.cage <- read.experiment(paste0(experiment.dir, exp.name.CAGE))
+  df.cage <- read.experiment(paste0(experiment.dir, exp.name.CAGE)) #(df.cage <- NULL if you don't use CAGE)
   df.rfp  <- read.experiment(paste0(experiment.dir, exp.name.RFP))
   df.rna  <- read.experiment(paste0(experiment.dir, exp.name.RNA))
-  # Subset experiments to stages / tissues we want analysed (they must exist in all 3)
+  # Subset experiments to stages / tissues / conditions (groups) we want analysed (they must exist in all 3)
   conditions <- c("", NA) # Only empty conditions allowed (no mutants etc.)
   stages <- c("Dome","Shield", "2to4Cell", "fertilized") # 3 stages (we make 2to4 and fertilized as 1 stage)
   df.rfp <- df.rfp[df.rfp$stage %in% stages & df.rfp$condition %in% conditions,]
@@ -147,7 +150,7 @@ All other filtering you can do on results, like length of ORF or longest ORF per
 #¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
 # 2. Find uORF search region per CAGE
 #¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
-getLeadersFromCage(df.cage)
+getLeadersFromCage(df.cage) # set df.cage <- NULL if you don't have CAGE
 
 #¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
 # 3. Find candidate uORFs per CAGE
@@ -171,8 +174,7 @@ createCatalogueDB(df.cage)
 makeTrainingAndPredictionData(df.rfp, df.rna, organism = organism)
 ```
 # Prediction (when training data is ready)
-Run the prediction, you get a h2o model per tissue / stage and a combined model which has stronger
-predictive power.
+Run the prediction, you get a h2o model per tissue / stage
 ```r
 #¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
 # 7. Predict uORFs
@@ -187,11 +189,11 @@ as you want.
 #¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
 # 8. Analysis
 #¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
-# CAGE usage analysis
+# Main uORF analysis plot
 predictionVsCageHits()
 
-# Feature analysis
-featureAnalysis(prediction, tissue = "combined")
+# Feature analysis (pick your tissue or "total")
+featureAnalysis(prediction, tissue = "Shield")
 ```  
 
 ![uORF analysis](inst/extdata/analysis_plot.png)
@@ -296,7 +298,7 @@ prediction <- predictUorfs()
 predictionVsCageHits()
 
 # Feature analysis
-featureAnalysis(prediction, tissue = "combined")
+featureAnalysis(prediction, tissue = "Shield")
 ```  
 
 #### Feedback

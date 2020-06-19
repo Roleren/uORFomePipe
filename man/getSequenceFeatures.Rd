@@ -4,12 +4,21 @@
 \alias{getSequenceFeatures}
 \title{Get sequence features from orfik}
 \usage{
-getSequenceFeatures(organism, biomart)
+getSequenceFeatures(
+  organism,
+  biomart,
+  grl = uORFomePipe:::getUorfsInDb(),
+  mode = "uORF"
+)
 }
 \arguments{
 \item{organism}{scientifi name, example "Homo sapiens" or "Danio rerio"}
 
-\item{biomart}{name of biomart for organism, example "hsapiens_gene_ensembl"
+\item{biomart}{name of biomart for organism, example "hsapiens_gene_ensembl"}
+
+\item{grl}{the orfs as GRangesList}
+
+\item{mode}{character, default: "uORF", alternative: "ORF".
 or "drerio_gene_ensembl"}
 }
 \description{

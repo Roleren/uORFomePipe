@@ -1,60 +1,84 @@
 #' Plot top tissues
 #'
-#' Shows max 20 tissues
-#' @param saveName full name of location to save to, will save as png
+#' Shows max 20 tissues candidate and predicted uORF counts
+#' And start and stop codon usage for combined prediction
+#' @param saveName full name of location to save to, default
+#' "differential_uORF_usage.png"
+#' @param mode character, default: "uORF". alternative "ORF" or what ever
+#' region you are checking.
 #' @import ggplot2
 #' @import gridExtra
 #' @export
-predictionVsCageHits <- function(saveName = "differential_uORF_usage"){
-  cageTissues <- readRDS(paste0(dataFolder,"/tissueAtlas.rds"))[,-1]
-  cageTissues$combined <- rowSums(cageTissues) > 0
+predictionVsCageHits <- function(saveName = "differential_uORF_usage.png", mode = "uORF") {
+  if (file.exists(paste0(dataFolder,"/tissueAtlas.rds"))) {
+    cageTissues <- readRDS(paste0(dataFolder,"/tissueAtlas.rds"))[,-1]
+    cageTissues$total <- rowSums(cageTissues) > 0
 
-  cageRed <- cageTissues[, colSums(cageTissues) > 0, with = F]
-  inAll <- sum(rowSums(cageRed) == ncol(cageRed))
-  bestNames <- names(sort(-colSums(cageRed)))[1:min(20, ncol(cageRed))]
-  cageRed <- cageRed[,bestNames, with = F]
-  values <- c(rep(inAll, ncol(cageRed)), colSums(cageRed) - inAll)
-  variable <- c(rep(colnames(cageRed), 2))
-  type <- c(rep("uORFs in all tissues", ncol(cageRed)), rep("uORFs in this tissue", ncol(cageRed)))
-  df <- data.table(value = values, variable, type)
-  df$type <- factor(df$type, levels = c("uORFs in all tissues", "uORFs in this tissue"), ordered = TRUE)
-  df$variable <- factor(df$variable, levels = df[, sum(value), by = variable][order(V1),]$variable, ordered = TRUE)
-  cageAll <- ggplot(df, aes(x=variable,y=value,fill=type)) +
-    scale_fill_manual(values = c("turquoise3", "brown1")) +
-    geom_bar(stat="identity", position =  position_stack(reverse = TRUE)) +
-    xlab("Tissue")+ylab("# uORFs found by CAGE") +
-    scale_y_continuous(labels = scales::scientific) +
-    theme(axis.text.y = element_text(size = 10)) +
-    guides(fill=FALSE) +
-    coord_flip()
+    ncolHits <- rowSums(cageTissues)
+    inAll <- sum(ncolHits == ncol(cageTissues))
+    inMoreThanOneNotAll <- (ncolHits > 2) & (ncolHits != ncol(cageTissues))
+    inUnique <- ncolHits <= 2 & ncolHits > 0
+    if ((inAll + sum(inMoreThanOneNotAll) + sum(inUnique)) != sum(ncolHits > 0))
+      stop("A bug in split of Prediction hits, report bug on github!")
+    top20 <- names(sort(-colSums(cageTissues)))[1:min(20, ncol(cageTissues))]
+
+    cageRed <- cageTissues[, top20, with = FALSE]
+    values <- c(rep(inAll, ncol(cageRed)), colSums(cageRed[inMoreThanOneNotAll]),
+                colSums(cageRed[inUnique]))
+    variable <- rep(colnames(cageRed), 3)
+    type <- c(rep("uORFs in all", ncol(cageRed)), rep("uORFs > 1", ncol(cageRed)),
+              rep("uORFs unique", ncol(cageRed)))
+    df <- data.table(value = values, variable, type)
+    df$type <- factor(df$type, levels = c("uORFs in all", "uORFs > 1", "uORFs unique"), ordered = TRUE)
+    df$variable <- factor(df$variable, levels = df[, sum(value),
+                                                   by = variable][order(V1),]$variable, ordered = TRUE)
+    cageAll <- ggplot(df, aes(x=variable,y=value,fill=type)) +
+      scale_fill_manual(values = c("turquoise3", "brown1", "wheat3")) +
+      geom_bar(stat="identity", position =  position_stack(reverse = TRUE)) +
+      xlab("Tissue")+ylab("# uORFs found by CAGE") +
+      scale_y_continuous(labels = scales::scientific) +
+      theme(axis.text.y = element_text(size = 8)) +
+      guides(fill=FALSE) +
+      coord_flip()
+  }
 
   # for prediction
   cageTissuesPrediction <- readTable("tissueAtlasByCageAndPred", with.IDs = FALSE)
-  inAll <- sum(rowSums(cageTissuesPrediction) == ncol(cageTissuesPrediction))
-  bestNames <- names(sort(-colSums(cageTissuesPrediction)))[1:min(20, ncol(cageRed))]
+  ncolHits <- rowSums(cageTissuesPrediction)
+  inAll <- sum(ncolHits == ncol(cageTissuesPrediction))
+  inMoreThanOneNotAll <- (ncolHits > 2) & (ncolHits != ncol(cageTissuesPrediction))
+  inUnique <- ncolHits <= 2 & ncolHits > 0
+  if ((inAll + sum(inMoreThanOneNotAll) + sum(inUnique)) != sum(ncolHits > 0))
+    stop("A bug in split of Prediction hits, report bug on github!")
+  top20 <- names(sort(-colSums(cageTissuesPrediction)))[1:min(20, ncol(cageTissuesPrediction))]
 
-  cageRed <- cageTissuesPrediction[,bestNames, with = F]
-  values <- c(rep(inAll, ncol(cageRed)), colSums(cageRed) - inAll)
-  variable <- rep(colnames(cageRed), 2)
-  type <- c(rep("uORFs in all tissues", ncol(cageRed)), rep("uORFs in this tissue", ncol(cageRed)))
+  cageRed <- cageTissuesPrediction[, top20, with = FALSE]
+  values <- c(rep(inAll, ncol(cageRed)), colSums(cageRed[inMoreThanOneNotAll]), colSums(cageRed[inUnique]))
+  variable <- rep(colnames(cageRed), 3)
+  type <- c(rep(p(mode,"s in all"), ncol(cageRed)),
+            rep(p(mode,"s > 1"), ncol(cageRed)), rep(p(mode,"s unique"), ncol(cageRed)))
   df <- data.table(value = values, variable, type)
-  df$type <- factor(df$type, levels = c("uORFs in all tissues", "uORFs in this tissue"), ordered = TRUE)
-  df$variable <- factor(df$variable, levels = df[, sum(value), by = variable][order(V1),]$variable, ordered = TRUE)
+  df$type <- factor(df$type, levels = c(p(mode,"s in all"), p(mode,"s > 1"), p(mode,"s unique")), ordered = TRUE)
+  df$variable <- factor(df$variable, levels = df[, sum(value),
+                                                 by = variable][order(V1),]$variable, ordered = TRUE)
   predAll <- ggplot(df, aes(x=variable, y=value, fill=type)) +
     geom_bar(stat="identity", position =  position_stack(reverse = TRUE)) +
-    scale_fill_manual(values = c("turquoise3", "brown1")) +
+    scale_fill_manual(values = c("turquoise3", "brown1", "wheat3")) +
     scale_y_continuous(labels = scales::scientific) +
-    xlab("Tissue")+ylab("# predicted active uORFs") +
+    xlab("")+ylab(p("# predicted active ", mode, "s")) +
     guides() +
-    theme(axis.text.y = element_text(size = 10)) +
+    theme(axis.text.y = element_text(size = 8)) +
     coord_flip()
-  pred <- gridExtra::grid.arrange(top = "uORF prediction", cageAll, predAll, ncol = 2)
+  if (file.exists(paste0(dataFolder,"/tissueAtlas.rds"))) {
+    pred <- gridExtra::grid.arrange(cageAll, predAll, ncol = 2)
+  } else pred <- predAll
   codons <- uORFomePipe:::startAndStopCodonPlots()
-  grid <- gridExtra::grid.arrange(pred, codons, ncol = 1)
-  ggsave(p(saveName, ".png"), grid, width = 200, units = "mm")
+  grid <- gridExtra::grid.arrange(top = p(mode," prediction"), pred, codons, ncol = 1)
+  ggsave(saveName, grid, width = 200, units = "mm")
   return(invisible(NULL))
 }
 
+#' Distribution of start and stop codon according to total prediction
 #' @import gridExtra
 startAndStopCodonPlots <- function() {
   cageTissuesPrediction <- readTable("finalCAGEuORFPrediction")
@@ -63,16 +87,19 @@ startAndStopCodonPlots <- function() {
   startAndStop <- data.table(StartCodons = factor(uorfData$StartCodons),
                              StopCodons = factor(uorfData$StopCodons),
                              prediction = cageTissuesPrediction$Matrix == 1)
+  x_size <- min(12, (14 / max(8, max(length(levels(startAndStop$StartCodons)), length(levels(startAndStop$StartCodons)))))*20)
+
   startCandidates <- ggplot(data = startAndStop, aes(StartCodons)) +
-    geom_bar(width = 0.3)
+    geom_bar(width = 0.3) + theme(axis.text.x = element_text(size = x_size))
   startPredicted <- ggplot(data = startAndStop[prediction == TRUE,], aes(StartCodons)) +
-    geom_bar(width = 0.3)
+    geom_bar(width = 0.3) + theme(axis.text.x = element_text(size = x_size))
   stopCandidates <- ggplot(data = startAndStop, aes(StopCodons)) +
-    geom_bar(width = 0.3)
+    geom_bar(width = 0.3) + theme(axis.text.x = element_text(size = x_size))
   stopPredicted <- ggplot(data = startAndStop[prediction == TRUE,], aes(StopCodons)) +
-    geom_bar(width = 0.3)
-  return(gridExtra::grid.arrange(startCandidates, startPredicted, stopCandidates,
-                          stopPredicted, ncol = 2))
+    geom_bar(width = 0.3) + theme(axis.text.x = element_text(size = x_size))
+  grid <- gridExtra::grid.arrange(startCandidates, startPredicted, stopCandidates,
+                                  stopPredicted, ncol = 2, top = "Start and stop codon by total prediction")
+  return(grid)
 }
 
 #' Venn diagram between two tissues

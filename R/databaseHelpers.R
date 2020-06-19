@@ -41,6 +41,9 @@ insertTable <- function(Matrix, tableName, appends = FALSE, rmOld = FALSE,
 }
 
 #' Read a table from the database
+#'
+#' Note: Because of SQL naming, any table you defined that has column names
+#' starting with X, then a number directly afterwards, will lose the X.
 #' @param tableName name of table in sql database
 #' @param asGR convert to GRanges
 #' @param with.IDs include ID column (remove to make calculations easier)
@@ -51,19 +54,21 @@ insertTable <- function(Matrix, tableName, appends = FALSE, rmOld = FALSE,
 #' @export
 readTable <- function(tableName, asGR = FALSE, with.IDs = TRUE,
                       uorfDB = get("uorfDB", envir = .GlobalEnv)) {
-  if (asGR){
+  if (asGR) {
     grl <- as.data.table(dbReadTable(uorfDB, tableName))
     return(makeGRangesListFromDataFrame(grl, split.field = "group",
                                         names.field = "group_name",
                                         keep.extra.columns = TRUE))
-
   } else{
+    dt <- as.data.table(dbReadTable(uorfDB,tableName))
+    wrongNames <- grep("^[X][0-9]", colnames(dt))
+    if (length(wrongNames) != 0) {
+      colnames(dt)[wrongNames] <- substring(colnames(dt)[wrongNames], 2)
+    }
     if (!with.IDs) {
-      dt <- as.data.table(dbReadTable(uorfDB,tableName))
-
       return(removeIDColumns(dt))
     }
-    return(as.data.table(dbReadTable(uorfDB,tableName)))
+    return(dt)
   }
 }
 

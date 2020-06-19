@@ -136,7 +136,7 @@ getCageTx <- function() {
     load(p(dataFolder, "/cageTx.rdata"), envir = .GlobalEnv)
   } else {
     tx <- getTx()
-    cageFiveUTRs <- leaderCage()
+    cageFiveUTRs <- leaderCage(FALSE)
     tx[names(cageFiveUTRs)] <- ORFik:::extendLeaders(tx, cageFiveUTRs)
     assign("tx", tx,  envir = .GlobalEnv)
     save(tx, file = p(dataFolder, "/cageTx.rdata"))

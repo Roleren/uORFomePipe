@@ -33,15 +33,19 @@ makeCombinedPrediction <- function(tissues, dataFolder = get("dataFolder", envir
     return(readTable("finalPredWithProb"))
     }
   # load data
-  predicted_by_Ribo <- data.table()
+  predicted_ribo <- data.table()
   for (tissue in tissues) {
     prediction <- readRDS(paste0("prediction_model/prediction_", tissue, ".rds"))
-    predicted_by_Ribo <- cbind(predicted_by_Ribo, prediction$predict == 1) # set value
+    predicted_ribo <- cbind(predicted_ribo, prediction$predict == 1) # set value
   }
+  colnames(predicted_ribo) <- tissues
+  if (file.exists(paste0(dataFolder,"/tissueAtlas.rds"))) {
+    tissueAtlas <- readRDS(paste0(dataFolder,"/tissueAtlas.rds"))[,-1]
+    tissueAtlas$total <- rowSums(tissueAtlas) > 0
+  } else tissueAtlas <- TRUE
+  predicted_ribo$total <- rowSums(predicted_ribo) > 0
 
-  tissueAtlas <- readRDS(paste0(dataFolder,"/tissueAtlas.rds"))[,-1]
-  if ("combined" %in% tissues) tissueAtlas$combined <- rowSums(tissueAtlas) > 0
-  cageTissuesPrediction <- tissueAtlas & predicted_by_Ribo
+  cageTissuesPrediction <- tissueAtlas & predicted_ribo
 
   insertTable(cageTissuesPrediction, "tissueAtlasByCageAndPred", rmOld = TRUE)
   finalCagePred <- rowSums(cageTissuesPrediction) > 0
@@ -51,7 +55,7 @@ makeCombinedPrediction <- function(tissues, dataFolder = get("dataFolder", envir
   insertTable(finalCagePred.dt, "finalPredWithProb", rmOld = TRUE)
 
   startCodonMetrics(finalCagePred)
-  export.bed12(grl, file = p("candidate_and_predicted_uORFs_", tissue, ".bed"), rgb = 255*finalCagePred)
+  export.bed12(grl, file = p("candidate_and_predicted_uORFs_", "total", ".bed"), rgb = 255*finalCagePred)
   message("Prediction finished, now do the analysis you want")
   return(finalCagePred.dt)
 }
@@ -83,7 +87,7 @@ getTissueFromFeatureTable <- function(tableName, tissue) {
   if (length(tissue) > 1) stop("Length of tissue must be exactly 1!")
   uORFomePipe:::createDataBase(p(dataBaseFolder, "/uorfCatalogue.sqlite"))
   riboTable <- readTable(tableName)
-  tissues <- readTable("tissues_RiboSeq")[[1]]
+  tissues <- readTable("experiment_groups")[[1]]
   if (is.null(tissue) | (tissue == "combined")) {
   } else if (tissue %in% tissues){
     indices <- tissues == tissue

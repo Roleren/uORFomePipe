@@ -4,10 +4,12 @@
 \alias{startCodonMetrics}
 \title{Get start codon bias usage}
 \usage{
-startCodonMetrics(hits)
+startCodonMetrics(hits, tissue = NULL)
 }
 \arguments{
 \item{hits}{a logical vector of TRUE, FALSE (TRUE is predicted)}
+
+\item{tissue}{default NULL, or a character name of tissue to print}
 }
 \description{
 Usually something like this

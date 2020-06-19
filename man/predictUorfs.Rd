@@ -5,7 +5,7 @@
 \title{Predict uORFs using random forrest classification}
 \usage{
 predictUorfs(
-  tissues = readTable("tissues_RiboSeq")[[1]],
+  tissues = readTable("experiment_groups")[[1]],
   ip = "localhost",
   port = 54321,
   nthreads_h2o = min(45, as.integer(detectCores()/2)),
@@ -13,8 +13,8 @@ predictUorfs(
 )
 }
 \arguments{
-\item{tissues}{Tissues to train on, default (readTable("tissues_RiboSeq")[[1]]),
-use "combined" if only you want all in one}
+\item{tissues}{Groups to train on, default (readTable("experiment_groups")[[1]]),
+use "combined" if you want mean of all groups}
 
 \item{ip}{h2o cluster ip, default: "localhost".}
 

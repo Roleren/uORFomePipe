@@ -4,32 +4,33 @@
 #' pos set is by CDS (coding sequences)
 #' Neg seg is by trailers (3'UTRs)
 #'
-#' @param tissues Tissues to train on, default (readTable("tissues_RiboSeq")[[1]]),
-#'  use "combined" if only you want all in one
+#' @param tissues Groups to train on, default (readTable("experiment_groups")[[1]]),
+#'  use "combined" if you want mean of all groups
 #' @param ip h2o cluster ip, default: "localhost".
 #' @param port h2o cluster port, default: 54321
 #' @param nthreads_h2o number of cores for H20: default max(45, detectCores()/2)
 #' @param max_mem_size max allowed memory for H20: default ("200G")
 #' @export
 #' @import h2o
-predictUorfs <- function(tissues = readTable("tissues_RiboSeq")[[1]],
+predictUorfs <- function(tissues = readTable("experiment_groups")[[1]],
                          ip = "localhost",
                          port = 54321,
                          nthreads_h2o = min(45, as.integer(detectCores()/2)),
                          max_mem_size = "200G") {
+  h2o.started <- FALSE
   for (tissue in tissues) {
     message(p("Prediction for tissue: ", tissue))
+
     # make uORFTable
     if(file.exists(paste0("prediction_model/prediction_", tissue, ".rds"))) next
-
+    h2o.started <- TRUE
     training_model <- trainClassifier(tissue, ip, port, nthreads_h2o, max_mem_size)
     # Use training model from cds and trailers to predict on ORF prediction data (uORFs)
     prediction <- as.data.table(h2o.predict(training_model, as.h2o(makeORFPredictionData(tissue))))
-    hits <- as.logical(prediction[,3] > 0.50)
-    uORFomePipe:::startCodonMetrics(hits)
+    uORFomePipe:::startCodonMetrics(prediction$predict == 1, tissue)
     saveRDS(prediction, file = p("prediction_model/prediction_", tissue, ".rds"))
   }
-  h2o::h2o.shutdown(prompt = FALSE)
+  if (h2o.started) h2o::h2o.shutdown(prompt = FALSE)
   return(makeCombinedPrediction(tissues))
 }
 

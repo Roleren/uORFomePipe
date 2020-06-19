@@ -1,14 +1,18 @@
 #' Get sequence features from orfik
 #'@param organism scientifi name, example "Homo sapiens" or "Danio rerio"
 #'@param biomart name of biomart for organism, example "hsapiens_gene_ensembl"
+#'@param grl the orfs as GRangesList
+#'@param mode character, default: "uORF", alternative: "ORF".
 #'or "drerio_gene_ensembl"
-getSequenceFeatures <- function(organism, biomart) {
-  if(!tableNotExists("kozak") & !tableNotExists("gcContent")) {
+getSequenceFeatures <- function(organism, biomart,
+                                grl = uORFomePipe:::getUorfsInDb(),
+                                mode = "uORF") {
+  if(!tableNotExists("kozak") & !tableNotExists("threestopCodonGrouping")) {
     print("sequence features exist, delete and run again if you want remake!")
     return(NULL)
   }
-  message("Creating sequence features from uORFs")
-  grl <- uORFomePipe:::getUorfsInDb()
+  if (!(mode %in% c("uORF", "ORF"))) stop("mode must be uORF or ORF")
+  message("Creating sequence features from ORFs")
   uORFomePipe:::getAll(); uORFomePipe:::getGTF()
   # gene transcript connections for naming
   dt <- data.table(txNames = txNames(grl), geneNames = ORFik:::txNamesToGeneNames(txNames(grl), Gtf))
@@ -18,7 +22,13 @@ getSequenceFeatures <- function(organism, biomart) {
   kozak <- kozakSequenceScore(grl, tx, fa)
   # lengths
   lengths <- widthPerGroup(grl, F)
-  distORFCDS <- distToCds(grl, cageFiveUTRs, cds)
+  distORFCDS <- if (mode == "uORF") {
+    distToCds(grl, cageFiveUTRs, cds)
+  } else if (mode == "ORF") {
+    -widthPerGroup(grl, FALSE)
+  }
+
+
   distORFTSS <- distToTSS(grl, cageFiveUTRs)
   fractionLengths <- fractionLength(grl, ORFik:::widthPerGroup(tx))
   inFrameCDS <- ORFik:::isInFrame(distORFCDS)
@@ -50,12 +60,11 @@ getSequenceFeatures <- function(organism, biomart) {
 
   # exon-exon junctions
   eej <- numExonsPerGroup(fiveUTRs, TRUE)
-  link <- readTable("linkORFsToTx")
-  eej <- as.integer(eej[link$txNames])
+  txNames <- txNames(grl)
+  eej <- as.integer(eej[txNames])
   insertTable(data.table(eej = eej), "exon-exonJunctionsLeader")
 
   # number of uorfs per tx
-  txNames <- txNames(grl)
   numberOfUorfsPerTx <- S4Vectors::Rle(txNames)
   insertTable(data.table(nUorfs = runLength(numberOfUorfsPerTx)), "numberOfUorfsPerTx")
 
@@ -119,6 +128,6 @@ getGeneralRiboFeatures <- function(df.rfp, df.rna = NULL,
       insertTable(data.table(featu), p(preName, f), rmOld = TRUE)
     }
   } else {
-    print(paste0("Ribo-seq features exists in DB for", pr, "delete and run again if you want new"))
+    print(paste("Ribo-seq features exists in DB for:", pr, "delete and run again if you want new"))
   }
 }

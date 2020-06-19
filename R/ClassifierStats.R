@@ -4,14 +4,15 @@
 #' good: ATG, CTG, ACG and GTG
 #' bad: AAG AND AGG
 #' @param hits a logical vector of TRUE, FALSE (TRUE is predicted)
+#' @param tissue default NULL, or a character name of tissue to print
 #' @export
-startCodonMetrics <- function(hits){
+startCodonMetrics <- function(hits, tissue = NULL) {
+  if (!is.null(tissue)) message(p("Start codon distribution for tissue", tissue))
+  message("0 is downregulated, 1 is upregulated by chi.sq test")
   uorfData <- getAllSequenceFeaturesTable()
-  # if(!exists("uorfTable")) uorfTable <-
   ySeq <- rep(0, length(hits))
   ySeq[hits] <- 1
   StartResultsSequences <- chisq.test(table(data.frame(uorfData$StartCodons, prediction = as.factor(ySeq))))
-  # prin(cbind(a[order(a[,2], decreasing = T),], relative = a[order(a[,2], decreasing = T),2]/max(a[,2])))
   res <- round(StartResultsSequences$residuals,1)
   res <- res[order(res[,2],decreasing = T),]
   count <- table(uorfData$StartCodons[hits])[rownames(res)]
@@ -25,7 +26,7 @@ startCodonMetrics <- function(hits){
 #' @param prediction a data.table, 3 columns: (prediction, p0 and p1).
 #' Made from uORFomePipe
 #' @export
-featureAnalysis <- function(prediction, tissue = "all"){
+featureAnalysis <- function(prediction, tissue){
   uorfTable <- makeORFPredictionData(tissue)
   uts <- uorfTable
 

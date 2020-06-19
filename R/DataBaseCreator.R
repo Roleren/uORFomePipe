@@ -79,44 +79,54 @@ createUORFAtlas <- function(idFolder = idFolder,
 #' Tissue must have at least 2 CAGE libraries supporting the uORF
 #' to declare a hit in that tissue. If only one sample, that sample
 #' must include uORF to be a hit.
+#' @param cageTable an ORFik experiment of cage, or NULL
+#' @param dataFolder a path to folder with data
 getTissueTable <- function(cageTable, dataFolder){
   if (tableNotExists("tissueAtlasByCage")) {
-    #cageTable <- as.data.table(df.cage)
-    cageTable <- as.data.table(cageTable)
-    cageTable$tissue <- cageTable$stage; cageTable$stage <- NULL
-    cageTable[, index := .N, by = tissue]
-    uniqueTissues <- as.character(unique(cageTable$tissue))
-    # load needed tables, and make tissue atlas of cage
-    load(p(dataFolder,"/UORFAtlas.rdata"))
-    uorfIDs <- readTable("uniqueIDs"); colnames(uorfIDs) = "uorfID"
+    if (is.null(cageFiles)) { # No cage, make all TRUE
+      message("Running pipeline without CAGE data, set to NULL")
+      groups <- readTable("experiment_groups")[[1]]
+      uorfIDs <- readTable("uniqueIDs"); colnames(uorfIDs) = "uorfID"
+      tissueAtlas <- as.data.table(matrix(TRUE, nrow = nrow(uorfIDs), ncol = length(groups)+1))
+      tissueAtlas[, V1 := uorfIDs$uorfID]
+      colnames(tissueAtlas) <- c("uorfID", groups)
 
-    if(any(rowSums(uorfAtlas[,2:ncol(uorfAtlas)]) == 0))
-      stop("uorfAtlas and unique uorf IDs does not match!")
+    } else {
+      groups <- bamVarName(cageTable, skip.replicate = TRUE, skip.libtype = TRUE)
+      cageTable <- as.data.table(cageTable)
+      cageTable$tissue <- groups; cageTable$stage <- NULL
+      cageTable[, index := .N, by = tissue]
+      uniqueTissues <- as.character(unique(cageTable$tissue))
+      # load needed tables, and make tissue atlas of cage
+      load(p(dataFolder,"/UORFAtlas.rdata"))
+      uorfIDs <- readTable("uniqueIDs"); colnames(uorfIDs) = "uorfID"
 
-    finalMatrix <- as.data.table(matrix(nrow =
-      nrow(uorfIDs), ncol = length(uniqueTissues)+1))
+      if(any(rowSums(uorfAtlas[,2:ncol(uorfAtlas)]) == 0))
+        stop("uorfAtlas and unique uorf IDs does not match!")
 
-    finalMatrix[, V1 := uorfIDs$uorfID]
-    colnames(finalMatrix)[1] <- "uorfID"
-    colnames(finalMatrix)[2:ncol(finalMatrix)] <- uniqueTissues
-    onlyOneCAGE <- c()
-    for(i in 2:(length(uniqueTissues)+1)){
-      cageFilestoCheck <- cageTable[tissue == uniqueTissues[i-1]]$index
-      if(length(cageFilestoCheck) == 1) onlyOneCAGE <- c(onlyOneCAGE, i)
-    }
+      finalMatrix <- as.data.table(matrix(nrow =
+        nrow(uorfIDs), ncol = length(uniqueTissues)+1))
 
-    for(i in 2:(length(uniqueTissues)+1)){
-      cageFilestoCheck <- cageTable[tissue == uniqueTissues[i-1]]$index
-      cageFilestoCheck <- cageFilestoCheck + 1
-      makeGroupingForColumn <- rowSums(uorfAtlas[,cageFilestoCheck, with = F])
-      if (i %in% onlyOneCAGE) {
-        finalMatrix[, uniqueTissues[i-1] := makeGroupingForColumn > 0]
-      } else {
-        finalMatrix[, uniqueTissues[i-1] := makeGroupingForColumn > 0]
+      finalMatrix[, V1 := uorfIDs$uorfID]
+      colnames(finalMatrix) <- c("uorfID", uniqueTissues)
+      onlyOneCAGE <- c()
+      for(i in 2:(length(uniqueTissues)+1)){
+        cageFilestoCheck <- cageTable[tissue == uniqueTissues[i-1]]$index
+        if(length(cageFilestoCheck) == 1) onlyOneCAGE <- c(onlyOneCAGE, i)
       }
-    }
-    tissueAtlas <- finalMatrix
 
+      for(i in 2:(length(uniqueTissues)+1)){
+        cageFilestoCheck <- cageTable[tissue == uniqueTissues[i-1]]$index
+        cageFilestoCheck <- cageFilestoCheck + 1
+        makeGroupingForColumn <- rowSums(uorfAtlas[,cageFilestoCheck, with = F])
+        if (i %in% onlyOneCAGE) {
+          finalMatrix[, uniqueTissues[i-1] := makeGroupingForColumn > 0]
+        } else {
+          finalMatrix[, uniqueTissues[i-1] := makeGroupingForColumn > 0]
+        }
+      }
+      tissueAtlas <- finalMatrix
+    }
     saveRDS(tissueAtlas, file = p(dataFolder,"/tissueAtlas.rds"))
     insertTable(Matrix = tissueAtlas,tableName = "tissueAtlasByCage", rmOld = T)
     return("ok tissueAtlassCage")
