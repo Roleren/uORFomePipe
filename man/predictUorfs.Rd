@@ -9,7 +9,8 @@ predictUorfs(
   ip = "localhost",
   port = 54321,
   nthreads_h2o = min(45, as.integer(detectCores()/2)),
-  max_mem_size = "200G"
+  max_mem_size = "200G",
+  mode = "uORF"
 )
 }
 \arguments{

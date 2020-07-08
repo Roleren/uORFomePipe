@@ -6,13 +6,31 @@
 \usage{
 makeTrainingData(
   tissues = "combined",
-  features = c("countRFP", "disengagementScores", "entropyRFP", "startRegionCoverage",
-    "startRegionRelative", "floss", "ioScore", "ORFScores", "fpkmRFP", "RRS", "RSS",
-    "startCodonCoverage")
+  features = c("countRFP", "disengagementScores", "entropyRFP", "floss", "fpkmRFP",
+    "ioScore", "ORFScores", "RRS", "RSS", "startCodonCoverage", "startRegionCoverage",
+    "startRegionRelative"),
+  mode = "uORF",
+  max.artificial.length,
+  dataFolder = get("dataFolder", envir = .GlobalEnv)
 )
 }
 \arguments{
-\item{features}{features to train model on, must exist in database}
+\item{features}{features to train model on, must exist in database, default:
+c("countRFP", "disengagementScores", "entropyRFP", "floss",
+"fpkmRFP","ioScore", "ORFScores", "RRS", "RSS", "startCodonCoverage",
+"startRegionCoverage","startRegionRelative")}
+
+\item{mode}{character, default: "uORF". alternative "aCDS". Do you want to predict
+on uORFs or artificial CDS. if "aCDS" will run twice once for whole length CDS and one for
+truncated CDS to validate model works for short ORFs. "CDS" is option to predict on
+whole CDS.}
+
+\item{max.artificial.length}{integer, default: 100, only applies if mode = "aCDS",
+so ignore this for most people,
+when creating artificial ORFs from CDS, how large should maximum ORFs be,
+this number is 1/6 of maximum size of ORFs (max size 600 if artificialLength is 100)
+Will sample random size from 6 to that number, if max.artificial.length is
+2, you can get artificial ORFs of size (6, 9 or 12) (6, + 6 + (3x1), 6 + (3x2))}
 
 \item{tissue}{Tissue to train on, use "combined" if you want all in one,
 first run of training it is a ORFik experiment.}

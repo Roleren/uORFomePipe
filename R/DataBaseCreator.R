@@ -83,7 +83,7 @@ createUORFAtlas <- function(idFolder = idFolder,
 #' @param dataFolder a path to folder with data
 getTissueTable <- function(cageTable, dataFolder){
   if (tableNotExists("tissueAtlasByCage")) {
-    if (is.null(cageFiles)) { # No cage, make all TRUE
+    if (is.null(cageTable)) { # No cage, make all TRUE
       message("Running pipeline without CAGE data, set to NULL")
       groups <- readTable("experiment_groups")[[1]]
       uorfIDs <- readTable("uniqueIDs"); colnames(uorfIDs) = "uorfID"

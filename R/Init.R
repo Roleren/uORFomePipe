@@ -2,34 +2,52 @@
 #'
 #' Make directory structure for orf finding, create database
 #' assign variables and validate input data.
+#'
+#' Debug possibility: \cr
+#' If you get this error: \cr
+#'  Error in bmRequest(request = request, verbose = verbose) :\cr
+#'  Internal Server Error (HTTP 500). \cr
+#' Rerun and it should work, this is a port issue.
 #' @param mainPath folder for uORFome to put results
 #' @param df.rfp ORFik experiment of Ribo-seq
 #' @param df.rna ORFik experiment of RNA-seq
-#' @param df.cage ORFik experiment of CAGE
+#' @param df.cage ORFik experiment of CAGE, set to NULL if you don't have CAGE.
 #' @param dataFolder ORFik experiment that contains Annotation
 #' @param makeDatabase default FALSE, set to TRUE if you want
 #' to predict translated uORFs
 #' @param organism scientific name of organism,
 #' like Homo sapiens, Danio rerio, etc.
-#' @param biomart default "not_decided" will be automaticly detected by
-#' organism name. Set it if you know.
-#' @param mode character, default: "uORF". alternative "ORF". Do you want to predict
-#' on uORFs or ORFs (CDS etc.)
+#' @param biomart default "ensembl", will then be automaticly detected by
+#' organism name in ensembl database. Set to NULL if you don't want to check
+#' Gene symbols and GO terms.
+#' @param mode character, default: "uORF". alternative "aCDS". Do you want to predict
+#' on uORFs or artificial CDS. if "aCDS" will run twice once for whole length CDS and one for
+#' truncated CDS to validate model works for short ORFs. "CDS" is option to predict on
+#' whole CDS.
+#' @param startCodons.cds.allowed character, default same as startCodons argument.
+#' Which start codons can the CDS you train on have ?
+#' @param stopCodons.cds.allowed character, default same as stopCodons argument
+#' Which stop codons can the CDS you train on have ?
 #' @importFrom tools file_ext
 #' @importFrom BiocParallel registered
 #' @export
 orfikDirs <- function(mainPath, df.rfp, df.rna, df.cage,
-                      organism, biomart = "not_decided", mode = "uORF") {
-  if (!(mode %in% c("uORF", "ORF")))
-    stop("mode must be uORF or ORF")
+                      organism, biomart = "ensembl", mode = "uORF",
+                      startCodons.cds.allowed = c("ATG", "CTG", "TTG", "AAG", "AGG"),
+                      stopCodons.cds.allowed = c("TAA", "TGA", "TAG")) {
+  if (!(mode %in% c("uORF", "CDS", "aCDS")))
+    stop("mode must be uORF or CDS or aCDS (artificial CDS)")
 
   dir.create(mainPath, showWarnings = FALSE, recursive = TRUE)
   setwd(mainPath)
   message("Welcome, setting up uORFome folders\n")
+  message("--------------------------------------")
   message(p("Registered organism is: ", organism))
-  biomart_dataset <- getBiomartFromOrganism(organism)
+  biomart_dataset <- getBiomartFromOrganism(organism, biomart = biomart)
+  message(paste("Project location: ", mainPath))
+  message(paste("Run mode:", mode))
 
-  message(paste("main path for project will be: ", mainPath))
+  message("--------------------------------------")
   # Set directory paths
   if (mode == "uORF") {
     resultsFolder <- p(mainPath, "/results")
@@ -87,7 +105,7 @@ orfikDirs <- function(mainPath, df.rfp, df.rna, df.cage,
   # Set up annotation and save transcript-regions in helper_libraries
   gtfdb = df.rfp@txdb
   txdb <- NULL
-  if (!file.exists(p(dataFolder, "/threeUTRs.rds"))) {
+  if (!file.exists(p(dataFolder, "/CageFiveUTRs.rds"))) {
     seqstyle <- seqlevelsStyle(ORFik:::findFa(df.rfp@fafile))[1]
     f <- file_ext(gtfdb)
     if (f == "gff" | f == "gff2" | f == "gff3" | f == "gtf") {
@@ -116,7 +134,15 @@ orfikDirs <- function(mainPath, df.rfp, df.rna, df.cage,
     saveRDS(cds, file = p(dataFolder, "/cds.rds"))
     saveRDS(fiveUTRs, file = p(dataFolder, "/fiveUTRs.rds"))
     saveRDS(threeUTRs, file = p(dataFolder, "/threeUTRs.rds"))
-    if(mode != "uORF") saveRDS(tx, file = p(dataFolder, "/CageFiveUTRs.rds"))
+
+    if (mode == "aCDS") {
+      orfs <- subset.ORF(cds, startCodons = startCodons.cds.allowed,
+                         stopCodons = stopCodons.cds.allowed, fa = df.rfp@fafile)
+      saveRDS(orfs, p(dataFolder, "/cds_filtered.rds"))
+    } else if (mode == "uORF") {
+      saveRDS(cds[widthPerGroup(cds) > 5], p(dataFolder, "/cds_filtered.rds"))
+    }
+    if (mode != "uORF") saveRDS(tx, file = p(dataFolder, "/CageFiveUTRs.rds"))
 
     rm(list = c("tx", "cds", "fiveUTRs", "threeUTRs"), envir = .GlobalEnv)
   }
@@ -124,22 +150,22 @@ orfikDirs <- function(mainPath, df.rfp, df.rna, df.cage,
   assign("faiName", df.rfp@fafile, envir = .GlobalEnv)
   assign("gtfdb", p(dataFolder, "/Gtf.db"), envir = .GlobalEnv)
 
-  validateInputs(df.rfp, df.rna, df.cage)
-
+  validateInputs(df.rfp, df.rna, df.cage, mode)
+  message("--------------------------------------")
   message("This is default backend:")
   #print(registered()[1])
   message(p("Using ", registered()[[1]]$workers, " threads from CPU"))
   message(p("Example on how to register default backend to 10 cores:"))
-  print("register(MulticoreParam(workers = 10), default=TRUE)")
+  print("register(MulticoreParam(workers = 10), default=TRUE)\n")
 
-
-  message("\nuORFome is now ready")
+  message("Initialization finished")
+  message("--------------------------------------")
   return(invisible(NULL))
 }
 
 #' Validation of experiments
 #' @inheritParams orfikDirs
-validateInputs <- function(df.rfp, df.rna, df.cage) {
+validateInputs <- function(df.rfp, df.rna, df.cage, mode) {
   samples.rfp <- nrow(df.rfp);samples.rna <- nrow(df.rna)
   if (samples.rfp != samples.rna) stop("Not equal samples in RNA-seq and Ribo-seq")
   if (!all(df.rfp$stage %in% df.rna$stage))
@@ -152,8 +178,10 @@ validateInputs <- function(df.rfp, df.rna, df.cage) {
 
   } else if (!all(df.rfp$stage %in% df.cage$stage))
       stop("Not equal tissues/stages in CAGE and Ribo-seq")
+  # Making tissue grouping tables
   groups <- bamVarName(df.rfp, skip.replicate = TRUE, skip.libtype = TRUE)
   ugroups <- unique(groups)
+  if (mode %in% c("CDS", "aCDS")) ugroups <- "combined"
   if (tableNotExists("experiment_groups")) insertTable(ugroups, "experiment_groups")
   if (tableNotExists("experiment_groups_all")) insertTable(groups, "experiment_groups_all")
 

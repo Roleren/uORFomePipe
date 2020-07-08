@@ -1,83 +1,87 @@
 #' Get sequence features from orfik
-#'@param organism scientifi name, example "Homo sapiens" or "Danio rerio"
-#'@param biomart name of biomart for organism, example "hsapiens_gene_ensembl"
-#'@param grl the orfs as GRangesList
-#'@param mode character, default: "uORF", alternative: "ORF".
-#'or "drerio_gene_ensembl"
+#' @inheritParams orfikDirs
+#' @param grl the orfs as GRangesList, default uORFomePipe:::getUorfsInDb()
+#' @return return(invisible(NULL)
 getSequenceFeatures <- function(organism, biomart,
                                 grl = uORFomePipe:::getUorfsInDb(),
                                 mode = "uORF") {
-  if(!tableNotExists("kozak") & !tableNotExists("threestopCodonGrouping")) {
+  addit <- ifelse(mode == "CDS", "verify", "")
+  if(!tableNotExists(p(addit, "kozak")) & !tableNotExists(p(addit,"stopCodonGrouping")) &
+     file.exists("features/uORFSequenceFeatures.csv")) {
     print("sequence features exist, delete and run again if you want remake!")
     return(NULL)
   }
-  if (!(mode %in% c("uORF", "ORF"))) stop("mode must be uORF or ORF")
+  if (!(mode %in% c("uORF", "CDS", "aCDS")))
+    stop("mode must be uORF or CDS or aCDS (artificial CDS)")
   message("Creating sequence features from ORFs")
   uORFomePipe:::getAll(); uORFomePipe:::getGTF()
   # gene transcript connections for naming
-  dt <- data.table(txNames = txNames(grl), geneNames = ORFik:::txNamesToGeneNames(txNames(grl), Gtf))
-
 
   # kozak
   kozak <- kozakSequenceScore(grl, tx, fa)
-  # lengths
-  lengths <- widthPerGroup(grl, F)
-  distORFCDS <- if (mode == "uORF") {
-    distToCds(grl, cageFiveUTRs, cds)
-  } else if (mode == "ORF") {
-    -widthPerGroup(grl, FALSE)
-  }
-
-
-  distORFTSS <- distToTSS(grl, cageFiveUTRs)
-  fractionLengths <- fractionLength(grl, ORFik:::widthPerGroup(tx))
-  inFrameCDS <- ORFik:::isInFrame(distORFCDS)
-  isOverlappingCds <- isOverlapping(distORFCDS)
-  rankInTx <- rankOrder(grl)
+  # Start and stop
   starts <- startCodons(grl, is.sorted = T)
   StartCodons <- ORFik:::txSeqsFromFa(starts, fa, TRUE, FALSE)
   stops <- stopCodons(grl, is.sorted = TRUE)
   StopCodons <- ORFik:::txSeqsFromFa(stops, fa, TRUE, FALSE)
-  exonExonJunctions <- numExonsPerGroup(grl, FALSE)
-  gcContent <- gcContent(grl, fa)
-  goTerms <- uORFomePipe:::getORFsGoTerms(dt$geneNames, organism)
 
-  seqData <- data.table(rankInTx, lengths, kozak, fractionLengths,
-                         StartCodons = as.factor(StartCodons),
-                         StopCodons = as.factor(StopCodons),
-                         distORFCDS, distORFTSS, inFrameCDS, isOverlappingCds,
-                         exonExonJunctions, gcContent, goTerms = as.factor(goTerms))
-  fwrite(seqData, file = "features/uORFSequenceFeatures.csv")
-  for(f in colnames(seqData)) { # Create one table per feature in DB
-    featu <-  seqData[, which(colnames(seqData) == f), with = FALSE]
-    insertTable(featu, f)
+  # lengths
+  lengths <- widthPerGroup(grl, F)
+  if (mode == "uORF") {
+    dt <- data.table(txNames = txNames(grl), geneNames = ORFik:::txNamesToGeneNames(txNames(grl), Gtf))
+    distORFCDS <- distToCds(grl, cageFiveUTRs, cds)
+    distORFTSS <- distToTSS(grl, cageFiveUTRs)
+    fractionLengths <- fractionLength(grl, ORFik:::widthPerGroup(tx))
+    inFrameCDS <- ORFik:::isInFrame(distORFCDS)
+    isOverlappingCds <- isOverlapping(distORFCDS)
+    rankInTx <- rankOrder(grl)
+    exonExonJunctions <- numExonsPerGroup(grl, FALSE)
+    gcContent <- gcContent(grl, fa)
+    if (!is.null(biomart)) {
+      goTerms <- uORFomePipe:::getORFsGoTerms(dt$geneNames, organism)
+    } else {
+      goTerms <- rep("NA", length(lengths))
+    }
+
+
+    seqData <- data.table(rankInTx, lengths, kozak, fractionLengths,
+                          StartCodons = as.factor(StartCodons),
+                          StopCodons = as.factor(StopCodons),
+                          distORFCDS, distORFTSS, inFrameCDS, isOverlappingCds,
+                          exonExonJunctions, gcContent, goTerms = as.factor(goTerms))
+
+
+
+    # Gene information
+    insertTable(dt, "uORFTxToGene")
+    # Gene to symbol
+    if (!is.null(biomart))
+      insertTable(getAllORFGeneSymbols(dt$geneNames, biomart), "geneSymbols")
+
+    # exon-exon junctions
+    eej <- numExonsPerGroup(fiveUTRs, TRUE)
+    txNames <- txNames(grl)
+    eej <- as.integer(eej[txNames])
+    insertTable(data.table(eej = eej), "exon-exonJunctionsLeader")
+
+    # number of uorfs per tx
+    numberOfUorfsPerTx <- S4Vectors::Rle(txNames)
+    insertTable(data.table(nUorfs = runLength(numberOfUorfsPerTx)), "numberOfUorfsPerTx")
+  } else if (mode != "ORF") {
+    #distORFCDS <- -widthPerGroup(grl, FALSE)
+    seqData <- data.table(lengths, kozak,
+                          StartCodons = as.factor(StartCodons),
+                          StopCodons = as.factor(StopCodons))
   }
+  fwrite(seqData, file = p("features/", addit, "uORFSequenceFeatures.csv"))
+  # Create one table per feature in DB
 
-  # Gene information
-  insertTable(dt, "uORFTxToGene")
-  # Gene to symbol
-  insertTable(getAllORFGeneSymbols(dt$geneNames, biomart), "geneSymbols")
-
-  # exon-exon junctions
-  eej <- numExonsPerGroup(fiveUTRs, TRUE)
-  txNames <- txNames(grl)
-  eej <- as.integer(eej[txNames])
-  insertTable(data.table(eej = eej), "exon-exonJunctionsLeader")
-
-  # number of uorfs per tx
-  numberOfUorfsPerTx <- S4Vectors::Rle(txNames)
-  insertTable(data.table(nUorfs = runLength(numberOfUorfsPerTx)), "numberOfUorfsPerTx")
-
-  # Stop codon grouping (also for cds and threeUTRs)
-  insertTable(data.table(stopCodonGrouping = uniqueOrder(stops)), "stopCodonGrouping")
-
-  # cds
-  sg <- stopCodons(cds[widthPerGroup(cds) > 5], is.sorted = TRUE)
-  insertTable(data.table(stopCodonGrouping = uniqueOrder(sg)), "cdsstopCodonGrouping")
-  # trailers
-  sg <- stopCodons(threeUTRs[widthPerGroup(threeUTRs) > 5], is.sorted = T)
-  insertTable(data.table(stopCodonGrouping = uniqueOrder(sg)), "threestopCodonGrouping")
-
+  for(f in colnames(seqData)) {
+    featu <-  seqData[, which(colnames(seqData) == f), with = FALSE]
+    insertTable(featu, p(addit, f))
+  }
+  # Stop codon grouping
+  insertTable(data.table(stopCodonGrouping = uniqueOrder(stops)), p(addit, "stopCodonGrouping"))
   return(invisible(NULL))
 }
 
@@ -95,7 +99,8 @@ getGeneralRiboFeatures <- function(df.rfp, df.rna = NULL,
                                    threeUTRsSpecial = NULL) {
   pr <- ifelse(preName == "", "uORFs", preName)
   if (tableNotExists(p(preName, "ioScore"))) {
-    message(paste("Finding Ribo-seq features from", pr))
+    message("--------------------------------------")
+    message(paste("Finding Ribo-seq features for", pr))
     uORFomePipe:::getAll()
     if (!is.null(threeUTRsSpecial)) threeUTRs <- threeUTRsSpecial
     startRegion <- startRegion(grl, tx, T, -3, 9)
@@ -106,6 +111,7 @@ getGeneralRiboFeatures <- function(df.rfp, df.rna = NULL,
 
     libs <-bplapply(seq(length(paths)),
       function(x, grl, fiveUTRs, threeUTRs, cds, startRegion, paths, paths.rna) {
+        message(paths[[x]])
         X <- paths[[x]]
         Y <- paths.rna[[x]]
         style <- seqlevelsStyle(grl)

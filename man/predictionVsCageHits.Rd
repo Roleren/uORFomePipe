@@ -4,7 +4,10 @@
 \alias{predictionVsCageHits}
 \title{Plot top tissues}
 \usage{
-predictionVsCageHits(saveName = "differential_uORF_usage.png", mode = "uORF")
+predictionVsCageHits(
+  saveName = p("differential_", mode, "_usage.png"),
+  mode = "uORF"
+)
 }
 \arguments{
 \item{saveName}{full name of location to save to, default

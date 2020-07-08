@@ -16,22 +16,23 @@ predictUorfs <- function(tissues = readTable("experiment_groups")[[1]],
                          ip = "localhost",
                          port = 54321,
                          nthreads_h2o = min(45, as.integer(detectCores()/2)),
-                         max_mem_size = "200G") {
+                         max_mem_size = "200G",  mode = "uORF") {
   h2o.started <- FALSE
+  preName <- ifelse(mode == "CDS", "verify_", "")
   for (tissue in tissues) {
     message(p("Prediction for tissue: ", tissue))
 
     # make uORFTable
-    if(file.exists(paste0("prediction_model/prediction_", tissue, ".rds"))) next
+    if(file.exists(p("prediction_model/prediction_", preName, tissue, ".rds"))) next
     h2o.started <- TRUE
     training_model <- trainClassifier(tissue, ip, port, nthreads_h2o, max_mem_size)
     # Use training model from cds and trailers to predict on ORF prediction data (uORFs)
-    prediction <- as.data.table(h2o.predict(training_model, as.h2o(makeORFPredictionData(tissue))))
+    prediction <- as.data.table(h2o.predict(training_model, as.h2o(makeORFPredictionData(tissue, mode))))
     uORFomePipe:::startCodonMetrics(prediction$predict == 1, tissue)
-    saveRDS(prediction, file = p("prediction_model/prediction_", tissue, ".rds"))
+    saveRDS(prediction, file = p("prediction_model/prediction_", preName, tissue, ".rds"))
   }
   if (h2o.started) h2o::h2o.shutdown(prompt = FALSE)
-  return(makeCombinedPrediction(tissues))
+  return(makeCombinedPrediction(tissues, mode = mode))
 }
 
 #' The training model with cds and 3' UTRs as random forest
@@ -44,6 +45,8 @@ trainClassifier <- function(tissue,
                             max_mem_size = "200G") {
 
   if(file.exists(paste0("prediction_model/randomForrest_",tissue))) {
+    #TODO! Double check this one
+    h2o.init(ip = ip, port = port, nthreads = nthreads_h2o, max_mem_size = max_mem_size)
     forrest <- h2o.loadModel(path = p("prediction_model/randomForrest_",tissue,"/",
                                           list.files(p("prediction_model/randomForrest_",tissue)[1])))
     return(forrest)

@@ -4,13 +4,17 @@
 \alias{getUorfsInDb}
 \title{get the uorfs in the database}
 \usage{
-getUorfsInDb(withExons = T, withTranscripts = T, uniqueORFs = T)
+getUorfsInDb(withExons = T, withTranscripts = T, uniqueORFs = T, mode = "uORF")
 }
 \arguments{
-\item{withExons}{should the uorfs be splitted by exons}
+\item{withExons}{logical, default TRUE, should the uorfs be splitted by exons}
 
-\item{withTranscripts}{should the uorfs have transcript information,
+\item{withTranscripts}{logical, default TRUE, should the uorfs have transcript information,
 warning, this will duplicate some uorfs.}
+
+\item{uniqueORFs}{logical, default TRUE, only unique}
+
+\item{tissue}{character, only applicable when mode is "aCDS"}
 }
 \value{
 a GRangesList or data.table, if(F, F)

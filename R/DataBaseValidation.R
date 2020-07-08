@@ -9,7 +9,9 @@
 #' @import ggplot2
 #' @import gridExtra
 #' @export
-predictionVsCageHits <- function(saveName = "differential_uORF_usage.png", mode = "uORF") {
+predictionVsCageHits <- function(saveName = p("differential_", mode, "_usage.png"), mode = "uORF") {
+  if (!(mode %in% c("uORF", "CDS", "aCDS")))
+    stop("mode must be uORF or CDS or aCDS (artificial CDS)")
   if (file.exists(paste0(dataFolder,"/tissueAtlas.rds"))) {
     cageTissues <- readRDS(paste0(dataFolder,"/tissueAtlas.rds"))[,-1]
     cageTissues$total <- rowSums(cageTissues) > 0
@@ -19,7 +21,7 @@ predictionVsCageHits <- function(saveName = "differential_uORF_usage.png", mode 
     inMoreThanOneNotAll <- (ncolHits > 2) & (ncolHits != ncol(cageTissues))
     inUnique <- ncolHits <= 2 & ncolHits > 0
     if ((inAll + sum(inMoreThanOneNotAll) + sum(inUnique)) != sum(ncolHits > 0))
-      stop("A bug in split of Prediction hits, report bug on github!")
+      stop("A bug in split of CAGE Prediction hits, report bug on github!")
     top20 <- names(sort(-colSums(cageTissues)))[1:min(20, ncol(cageTissues))]
 
     cageRed <- cageTissues[, top20, with = FALSE]
@@ -43,13 +45,14 @@ predictionVsCageHits <- function(saveName = "differential_uORF_usage.png", mode 
   }
 
   # for prediction
-  cageTissuesPrediction <- readTable("tissueAtlasByCageAndPred", with.IDs = FALSE)
+  addit <- ifelse(mode == "CDS", "verify_", "")
+  cageTissuesPrediction <- readTable(p(addit, "tissueAtlasByCageAndPred"), with.IDs = FALSE)
   ncolHits <- rowSums(cageTissuesPrediction)
   inAll <- sum(ncolHits == ncol(cageTissuesPrediction))
   inMoreThanOneNotAll <- (ncolHits > 2) & (ncolHits != ncol(cageTissuesPrediction))
-  inUnique <- ncolHits <= 2 & ncolHits > 0
+  inUnique <- ncolHits <= 2 & ncolHits > 0 & ncol(cageTissuesPrediction) > 2
   if ((inAll + sum(inMoreThanOneNotAll) + sum(inUnique)) != sum(ncolHits > 0))
-    stop("A bug in split of Prediction hits, report bug on github!")
+    stop("A bug in split of Ribo-seq Prediction hits, report bug on github!")
   top20 <- names(sort(-colSums(cageTissuesPrediction)))[1:min(20, ncol(cageTissuesPrediction))]
 
   cageRed <- cageTissuesPrediction[, top20, with = FALSE]
@@ -100,6 +103,76 @@ startAndStopCodonPlots <- function() {
   grid <- gridExtra::grid.arrange(startCandidates, startPredicted, stopCandidates,
                                   stopPredicted, ncol = 2, top = "Start and stop codon by total prediction")
   return(grid)
+}
+
+#' Test artificial vs original cds
+#'
+#' Will see how well the model handles smaller versions of it self
+#' @param artificial path to uORFomePipe run of artificial
+#' @param original path to uORFomePipe run of original
+#' @param output path to save plot
+#' @return data.table of hits per length of artificial
+#' @export
+test.artificial <- function(artificial,
+                            output,
+                            original = artificial,
+                            minimum.group.size = 30) {
+  dt <- verification.conf.matrix(artificial, output, original, minimum.group.size)
+  dt2 <- copy(dt)
+  dt2 <- dt2[, .(true.positive.rate = sum(true.positive) / (sum(true.positive) + sum(false.negative)),
+                 true.negative.rate = sum(true.negative) / (sum(false.positive) + sum(true.negative)),
+                 group.size = .N), by = lengths]
+  dt2 <- dt2[order(lengths),]
+  dt2 <- dt2[group.size >= minimum.group.size,]
+  if (!any(is.finite(dt2$true.positive.rate))) {
+    warning("No finite group of true positivies to create comparison, returning!")
+    return(dt2)
+  }
+  if (!all(is.finite(dt2$true.positive.rate))) warning("Found verify groups without true positivies, check data!")
+
+  dt2$lengths <- dt2$lengths / 3
+  # "TPR & TNR vs length of Artificial CDS"
+  gg <- ggpubr::ggscatter(dt2, "lengths", c("true.positive.rate", "true.negative.rate"),
+                          numeric.x.axis = TRUE, merge = TRUE,
+                          ylab = "rate", xlab = "artificial CDS length (# codons)", add = "loess"); plot(gg)
+  ggsave(output, gg, width = 4, height = 3)
+  if (sum(dt2$true.positive, na.rm = T) == 0) {
+    warning("Not enough true positives (predicted CDS) to make comparison model!")
+  } else
+    print(cor.test(dt2$lengths, dt2$true.positive))
+  return(dt2)
+}
+
+#' Get comparison of validation model to full CDS length
+#' @inheritParams test.artificial
+#' @export
+verification.conf.matrix <- function(artificial,
+                                     original = artificial,
+                                     minimum.group.size = 30) {
+  # artificial <- mainPath_aCDS; original = artificial;minimum.group.size = 30
+  # test
+  uorfdb_full <- dbConnect(RSQLite::SQLite(), p(original,"/dataBase/uorfCatalogue.sqlite"))
+  uorfdb_art <-  dbConnect(RSQLite::SQLite(), p(artificial,"/dataBase/uorfCatalogue.sqlite"))
+  if (artificial == original) {
+    pred_full <- readTable("verify_finalPredWithProb", uorfDB = uorfdb_full)
+  } else pred_full <- readTable("finalPredWithProb", uorfDB = uorfdb_full)
+
+  pred_art <- readTable("finalPredWithProb",  uorfDB = uorfdb_art)
+  message("Prediction model for full CDS")
+  print(summary(pred_full))
+  if (sum(pred_full$prediction) == 0) warning("No CDS predicted, check input data!")
+  message("Prediction model for truncated CDS (artificial)")
+  print(summary(pred_art))
+  if (sum(pred_art$prediction) == 0) warning("No artificial CDS predicted, check input data!")
+
+  lengths <- readTable("lengths", uorfDB = uorfdb_art)
+  dt <- data.table(pred_full = pred_full$prediction == 1, pred_art = pred_art$prediction == 1, lengths)
+  dt[, true.positive := (pred_art & pred_full)]
+  dt[, false.positive := (pred_art & !pred_full)]
+  dt[, true.negative := (!pred_art & !pred_full)]
+  dt[, false.negative := (!pred_art & pred_full)]
+  print(summary(dt))
+  return(dt)
 }
 
 #' Venn diagram between two tissues

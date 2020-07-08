@@ -1,3 +1,116 @@
+#' Run whole uORFomePipe prediction
+#'
+#' Steps:\cr
+#' 1: Make directory structure for orf finding, create database
+#' assign variables and validate input data.\cr
+#' 2. Find CAGE transcripts\cr
+#' 3. Find uORFs\cr
+#' 4. Create database\cr
+#' 5. Fill database with NGS and sequence features\cr
+#' 6. Train the random forrest model\cr
+#' 7. Predict on uORFs\cr
+#' 8. Get analysis plots\cr
+#' \cr
+#' NOTE: IF it crashes it will continue from the point you quit, so delete the mainPath
+#' folder if you want fresh rerun.\cr Also do not change working directory after you
+#' started running, as this might make the program crash
+#' @inheritParams orfikDirs
+#' @inheritParams getCandidateuORFs
+#' @param max.artificial.length integer, default: 100, only applies if mode = "aCDS",
+#' so ignore this for most people,
+#' when creating artificial ORFs from CDS, how large should maximum ORFs be,
+#' this number is 1/6 of maximum size of ORFs (max size 600 if artificialLength is 100)
+#' Will sample random size from 6 to that number, if max.artificial.length is
+#' 2, you can get artificial ORFs of size (6, 9 or 12) (6, + 6 + (3x1), 6 + (3x2))
+#' @return the prediction as data.table with 3 columns. Prediction (0 or 1),
+#' p0 (probability of a negtive prediction), p1 (probability of positive prediction).
+#' Only one of p0 and p1 can be > 0.5, and that value will decide if
+#' prediction is 0 or 1.
+#' @export
+#' @examples
+#' mainPath <- "~/bio/results/uORFome_Zebrafish"
+#' organism <- "Danio rerio"
+#' # df.rfp <- read.experiment("path/to/rfp.csv")
+#' # df.rna <- read.experiment("path/to/rna.csv")
+#' # df.cage <- read.experiment("path/to/CAGE.csv")
+#' # find_uORFome(mainPath, organism, df.rfp, df.rna, df.cage)
+find_uORFome <- function(mainPath, organism, df.rfp, df.rna, df.cage,
+                         startCodons = "ATG|CTG|TTG|GTG|AAG|AGG|ACG|ATC|ATA|ATT",
+                         stopCodons = "TAA|TAG|TGA", mode = "uORF",
+                         max.artificial.length = 100,
+                         startCodons.cds.allowed = startCodons,
+                         stopCodons.cds.allowed = stopCodons) {
+  #¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
+  # Create folders, variables and validate input
+  #¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
+  orfikDirs(mainPath = mainPath,
+            df.rfp, df.rna, df.cage,
+            organism = organism,
+            mode = mode,
+            startCodons.cds.allowed = startCodons.cds.allowed,
+            stopCodons.cds.allowed = stopCodons.cds.allowed)
+  if (mode == "uORF") {
+    #¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
+    # 2. Find uORF search region per CAGE
+    #¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
+    getLeadersFromCage(df.cage)
+
+    #¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
+    # 3. Find candidate uORFs per CAGE
+    #¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
+    getCandidateuORFs(startCodons = startCodons,
+                      stopCodons = stopCodons)
+
+    #¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
+    # 4. make uorf IDs (to get unique identifier per uORF)
+    #¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
+    getIDsFromUorfs()
+
+    #¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
+    # 5. CAGE atlas per tissue and uORF / cage leader objects
+    #¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
+    createCatalogueDB(df.cage)
+    #¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
+    # 6. Find sequence, Ribo-seq and RNA-seq features for training model
+    #¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
+  }
+
+  makeTrainingAndPredictionData(df.rfp, df.rna, organism = organism, mode = mode,
+                                max.artificial.length = max.artificial.length)
+
+  #¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
+  # 7. Predict uORFs
+  #¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
+  # Do all prediction, the returned object will be the prediction for the "combined" predicted
+  # over all stages / tissues
+  prediction <- predictUorfs(mode = mode)
+
+  #¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
+  # 8. Analysis
+  #¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
+  # CAGE usage analysis (all tissues and total)
+  predictionVsCageHits(mode = mode)
+
+  # Feature analysis (Just on first tissue)
+  featureAnalysis(prediction, tissue = readTable("experiment_groups")[[1]][1])
+
+  if (mode == "aCDS") { # If artificial, now run for whole to verify.
+    find_uORFome(mainPath, organism, df.rfp, df.rna, df.cage,
+                 startCodons = startCodons,
+                 stopCodons = stopCodons, mode = "CDS",
+                 max.artificial.length = max.artificial.length,
+                 startCodons.cds.allowed = startCodons.cds.allowed,
+                 stopCodons.cds.allowed = stopCodons.cds.allowed)
+  } else if (mode == "CDS") {
+    dt2 <- test.artificial(artificial = mainPath,
+                           output = p(mainPath, "/validation_comparison_",
+                                      max.artificial.length, "_rates.png"))
+  }
+
+  return(prediction)
+}
+
+
 #' Reassign leaders by CAGE
 #'
 #' Step 1 of uORFome pipeline
@@ -52,6 +165,16 @@ getCandidateuORFs <- function(folder = regionUORFsFolder,
   message("Searching for candidate uORFs")
   leadersList = list.files(folder, full.names = TRUE)
   uORFomePipe:::getCDS()
+  convertCodonStyle <- function(codons) {
+    if (length(codons) > 1) {
+      if (all(nchar(codons) == 3)) {
+        return(paste(codons, collapse = "|"))
+      } else stop("Wrong input of start or stop codons!")
+    } else if (length(codons) == 0) stop("Either no start or stop codon given!")
+    return(codons)
+  }
+  startCodons <- convertCodonStyle(startCodons)
+  stopCodons <- convertCodonStyle(stopCodons)
   bplapply(leadersList, function(i, cds) {
     saveName = p(uorfFolder, gsub(pattern = "regionUORF.rds", replacement = "uorf.rds",
                                   x = basename(i)))
@@ -103,25 +226,37 @@ createCatalogueDB <- function(df.cage,
 #' All features from sequence, Riboseq and RNAseq
 #'
 #' Step 5 of uORFome pipeline
+#' @inheritParams find_uORFome
 #' @export
 makeTrainingAndPredictionData <- function(df.rfp, df.rna,
                                           organism = get("organism", mode = "character", envir = .GlobalEnv),
                                           biomart = get("biomart_dataset", mode = "character", envir = .GlobalEnv),
-                                          orfs = uORFomePipe:::getUorfsInDb(), mode = "uORF") {
-  if (!(mode %in% c("uORF", "ORF"))) stop("mode must be uORF or ORF")
-  # first sequence features
-  getSequenceFeatures(organism, biomart, orfs, mode = mode)
-  # Ribo-seq features for ORFs
-  getGeneralRiboFeatures(df.rfp, df.rna, orfs)
-  # Ribo-seq features for cds and 3'
-  getCDS()
-  getGeneralRiboFeatures(df.rfp, grl = cds[widthPerGroup(cds) > 5], preName = "cds")
+                                          mode = "uORF",
+                                          max.artificial.length) {
+  message("--------------------------------------")
+  if (!(mode %in% c("uORF", "CDS", "aCDS")))
+    stop("mode must be uORF or CDS or aCDS (artificial CDS)")
+
+  ## TRAINING data: Ribo-seq features for cds and 3'
+  message("Making training data from CDS and trailers (3' UTRs):")
+  getGeneralRiboFeatures(df.rfp, grl = getCDSFiltered(), preName = "cds")
   getThreeUTRs()
   getGeneralRiboFeatures(df.rfp, grl = threeUTRs[widthPerGroup(threeUTRs) > 5],
                          preName = "three", threeUTRsSpecial = getSpecialThreeUTRs())
+  uORFomePipe:::makeTrainingData(df.rfp, max.artificial.length = max.artificial.length,
+                                 mode = mode)
 
-  uORFomePipe:::makeTrainingData(df.rfp)
-  uORFomePipe:::makeORFPredictionData(df.rfp)
+  ## Prediction data: Sequence and Ribo-seq features for uORFs / artificial CDS
+  # first sequence features
+  message("--------------------------------------")
+  orfs <- uORFomePipe:::getUorfsInDb(mode = mode)
+  getSequenceFeatures(organism, biomart, orfs, mode = mode)
+  # Ribo-seq features for ORFs
+
+  getGeneralRiboFeatures(df.rfp, df.rna, orfs,
+                         preName = ifelse(mode == "CDS", "verify", ""))
+  uORFomePipe:::makeORFPredictionData(df.rfp, mode = mode)
+
   message("Training complete")
   return(invisible(NULL))
 }

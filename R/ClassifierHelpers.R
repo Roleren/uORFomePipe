@@ -28,14 +28,16 @@ forest <- function(dt, cv = 10, ntrees = 64, ip,
 #' @return data.table with 3 columns. 1. "prediction" (1 or 0), 2. p0 (probability for FALSE),
 #' p1 (probability for TRUE)
 makeCombinedPrediction <- function(tissues, dataFolder = get("dataFolder", envir = .GlobalEnv),
-                                   grl = getUorfsInDb()) {
-  if (!tableNotExists("finalPredWithProb")) {
-    return(readTable("finalPredWithProb"))
-    }
+                                   mode,
+                                   grl = getUorfsInDb(mode = mode)) {
+  preName <- ifelse(mode == "CDS", "verify_", "")
+  if (!tableNotExists(p(preName, "finalPredWithProb"))) {
+    return(readTable(p(preName, "finalPredWithProb")))
+  }
   # load data
   predicted_ribo <- data.table()
   for (tissue in tissues) {
-    prediction <- readRDS(paste0("prediction_model/prediction_", tissue, ".rds"))
+    prediction <- readRDS(paste0("prediction_model/prediction_", preName, tissue, ".rds"))
     predicted_ribo <- cbind(predicted_ribo, prediction$predict == 1) # set value
   }
   colnames(predicted_ribo) <- tissues
@@ -47,33 +49,51 @@ makeCombinedPrediction <- function(tissues, dataFolder = get("dataFolder", envir
 
   cageTissuesPrediction <- tissueAtlas & predicted_ribo
 
-  insertTable(cageTissuesPrediction, "tissueAtlasByCageAndPred", rmOld = TRUE)
+  insertTable(cageTissuesPrediction, p(preName, "tissueAtlasByCageAndPred"), rmOld = TRUE)
   finalCagePred <- rowSums(cageTissuesPrediction) > 0
-  insertTable(finalCagePred, "finalCAGEuORFPrediction", rmOld = TRUE)
+  insertTable(finalCagePred, p(preName, "finalCAGEuORFPrediction"), rmOld = TRUE)
 
   finalCagePred.dt <- data.table(prediction = finalCagePred, prediction[, 2:3])
-  insertTable(finalCagePred.dt, "finalPredWithProb", rmOld = TRUE)
+  insertTable(finalCagePred.dt, p(preName, "finalPredWithProb"), rmOld = TRUE)
 
   startCodonMetrics(finalCagePred)
-  export.bed12(grl, file = p("candidate_and_predicted_uORFs_", "total", ".bed"), rgb = 255*finalCagePred)
+  export.bed12(grl, file = p("candidate_and_predicted_uORFs_", preName, "total", ".bed"), rgb = 255*finalCagePred)
   message("Prediction finished, now do the analysis you want")
   return(finalCagePred.dt)
 }
 
-#' strongCDS
+#' Find active CDS
 #'
-#' A filter to say if a CDS has strong indication of translation, used as strong positives
+#' A filter to say if a CDS has strong indication of translation,
+#' used as part of positives training set
 #' @param coverage (counts over region)
 #' @param fpkm FPKM value of region
 #' @param startCodonCoverage (Coverage of startcodon +/- 1 base region)
 #' @param startRegionRelative Relative coverage of start region to upstream short region
+#' @param ORFScore Periodicity score of triplets, > 0 if frame 0 has most reads.
 #' @return logical TRUE/FALSE per row
-strongCDS <- function(coverage, fpkm, startCodonCoverage, startRegionRelative) {
-  filter <- (coverage > min(quantile(coverage, 0.25), 10)) & (fpkm > quantile(fpkm, 0.15)) &
-    (startCodonCoverage > quantile(startCodonCoverage, 0.75)) & startRegionRelative > 0.95
+strongCDS <- function(coverage, fpkm, startCodonCoverage, startRegionRelative, ORFScore) {
+  filter <- (coverage > min(quantile(coverage, 0.25), 10)) & (fpkm > max(1, quantile(fpkm, 0.15))) &
+    (startCodonCoverage > quantile(startCodonCoverage, 0.75)) &
+    (startRegionRelative > 0.95) & (ORFScore > 1.0)
   return(filter)
 }
 
+#' Find non-active trailers
+#'
+#' A filter to say if a trailer has strong indication of no translation,
+#' used as part of negative training set
+#' @param coverage (counts over region)
+#' @param startRegionRelative Relative coverage of start region to upstream short region
+#' @param ORFScore Periodicity score of triplets, > 0 if frame 0 has most reads.
+#' @return logical TRUE/FALSE per row
+weakTrailer <- function(coverage, fpkm, startRegionRelative,
+                         ORFScore) {
+  filter <- (((coverage < quantile(coverage, 0.95)) |
+   (startRegionRelative < max(1, quantile(startRegionRelative, 0.97)))) |
+     fpkm < 1.1 | ORFScore < 0.5)
+  return(filter)
+}
 #' Get specific feature for specific tissues
 #'
 #' Grouped by rowMeans

@@ -4,14 +4,19 @@
 \alias{validateInputs}
 \title{Validation of experiments}
 \usage{
-validateInputs(df.rfp, df.rna, df.cage)
+validateInputs(df.rfp, df.rna, df.cage, mode)
 }
 \arguments{
 \item{df.rfp}{ORFik experiment of Ribo-seq}
 
 \item{df.rna}{ORFik experiment of RNA-seq}
 
-\item{df.cage}{ORFik experiment of CAGE}
+\item{df.cage}{ORFik experiment of CAGE, set to NULL if you don't have CAGE.}
+
+\item{mode}{character, default: "uORF". alternative "aCDS". Do you want to predict
+on uORFs or artificial CDS. if "aCDS" will run twice once for whole length CDS and one for
+truncated CDS to validate model works for short ORFs. "CDS" is option to predict on
+whole CDS.}
 }
 \description{
 Validation of experiments

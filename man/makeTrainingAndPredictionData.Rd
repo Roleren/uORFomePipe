@@ -9,9 +9,29 @@ makeTrainingAndPredictionData(
   df.rna,
   organism = get("organism", mode = "character", envir = .GlobalEnv),
   biomart = get("biomart_dataset", mode = "character", envir = .GlobalEnv),
-  orfs = uORFomePipe:::getUorfsInDb(),
-  mode = "uORF"
+  mode = "uORF",
+  max.artificial.length
 )
+}
+\arguments{
+\item{df.rfp}{ORFik experiment of Ribo-seq}
+
+\item{df.rna}{ORFik experiment of RNA-seq}
+
+\item{organism}{scientific name of organism,
+like Homo sapiens, Danio rerio, etc.}
+
+\item{mode}{character, default: "uORF". alternative "aCDS". Do you want to predict
+on uORFs or artificial CDS. if "aCDS" will run twice once for whole length CDS and one for
+truncated CDS to validate model works for short ORFs. "CDS" is option to predict on
+whole CDS.}
+
+\item{max.artificial.length}{integer, default: 100, only applies if mode = "aCDS",
+so ignore this for most people,
+when creating artificial ORFs from CDS, how large should maximum ORFs be,
+this number is 1/6 of maximum size of ORFs (max size 600 if artificialLength is 100)
+Will sample random size from 6 to that number, if max.artificial.length is
+2, you can get artificial ORFs of size (6, 9 or 12) (6, + 6 + (3x1), 6 + (3x2))}
 }
 \description{
 Step 5 of uORFome pipeline

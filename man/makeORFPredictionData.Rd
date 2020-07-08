@@ -6,15 +6,22 @@
 \usage{
 makeORFPredictionData(
   tissues = "combined",
-  features = c("countRFP", "disengagementScores", "entropyRFP", "startRegionCoverage",
-    "startRegionRelative", "floss", "ioScore", "ORFScores", "fpkmRFP", "RRS", "RSS",
-    "startCodonCoverage")
+  mode = "uORF",
+  features = c("countRFP", "disengagementScores", "entropyRFP", "floss", "fpkmRFP",
+    "ioScore", "ORFScores", "RRS", "RSS", "startCodonCoverage", "startRegionCoverage",
+    "startRegionRelative")
 )
 }
 \arguments{
-\item{features}{features to train model on, must exist in database}
+\item{mode}{character, default: "uORF". alternative "aCDS". Do you want to predict
+on uORFs or artificial CDS. if "aCDS" will run twice once for whole length CDS and one for
+truncated CDS to validate model works for short ORFs. "CDS" is option to predict on
+whole CDS.}
 
-\item{tissue}{Tissue to train on, use "combined" if you want all in one}
+\item{features}{features to train model on, must exist in database, default:
+c("countRFP", "disengagementScores", "entropyRFP", "floss",
+"fpkmRFP","ioScore", "ORFScores", "RRS", "RSS", "startCodonCoverage",
+"startRegionCoverage","startRegionRelative")}
 }
 \description{
 Get ribo-seq features for uORFs

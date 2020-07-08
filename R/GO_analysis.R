@@ -31,12 +31,14 @@ getORFsGoTerms <- function(geneNames, organism){
 }
 
 #' Guess biomart from organism name
-#' @param organism scientific name
-#' @param biomart character, default "ensembl"
+#' @inheritParams orfikDirs
 #' @importFrom biomaRt listDatasets
 #' @importFrom biomaRt useEnsembl
 #' @return a character with dataset used
 getBiomartFromOrganism <- function(organism, biomart="ensembl") {
+  if (is.null(biomart)) {
+    return(invisible(NULL))
+  }
   ensembl = useEnsembl(biomart = biomart)
   a <- listDatasets(ensembl)
   guess <- a[grep(pattern = p(unlist(strsplit(organism, " ")), collapse = "|"),

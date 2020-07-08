@@ -6,6 +6,9 @@
 \usage{
 getAllSequenceFeaturesTable()
 }
+\value{
+data.table with sequence features
+}
 \description{
 Extracted from the data base
 }

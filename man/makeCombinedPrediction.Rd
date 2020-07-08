@@ -7,7 +7,8 @@
 makeCombinedPrediction(
   tissues,
   dataFolder = get("dataFolder", envir = .GlobalEnv),
-  grl = getUorfsInDb()
+  mode,
+  grl = getUorfsInDb(mode = mode)
 )
 }
 \arguments{

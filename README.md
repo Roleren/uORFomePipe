@@ -11,13 +11,16 @@ Note that CAGE is optional, but will make you able to find uORFs outside the ori
 
 Here are the main steps:
 - 1. set up parameters and experiment
-- 2. Find new cage leaders
-- 3. Find candidate uORFs (possible by sequence)
-- 4. Create unique uORF ID's
-- 5. Create database objects
-- 6. Insert into database Ribo-seq, RNA-seq & Sequence features 
-- 7. Predict uORFs from features
-- 8. Analysis and plots
+- 2. Run uORFomePipeline: find_uORFome()
+
+The find_uORFome() function contains these steps:
+- a. Find new cage leaders
+- b. Find candidate uORFs (possible by sequence)
+- c. Create unique uORF ID's
+- d. Create database objects
+- e. Insert into database Ribo-seq, RNA-seq & Sequence features 
+- f. Predict uORFs from features
+- g. Analysis and plots
 
 
 
@@ -47,34 +50,34 @@ This is to make sure no mistakes are made and all data is valid, and easier grou
 First read about how ORFik experiment works:
 [ORFik experiment tutorial](https://bioconductor.org/packages/release/bioc/vignettes/ORFik/inst/doc/ORFikExperiment.html)
 
-Since we don't need most of the information in bam files, we create simplified libraries (bed files). And for Ribo-seq we p-shift
-the data. Remember to skip the CAGE steps here if you don't have it.
+Since we don't need most of the information in bam files, we create simplified libraries (simpleLibs() gives bed files).
+And for Ribo-seq we p-shift the data. Remember to skip the CAGE steps here if you don't have it.
 ```r
 library(uORFomePipe)
 #¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
 # Create experiments (1. CAGE, 2. Ribo-seq (RFP) and 3. RNA-seq (RNA))
 #¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
-experiment.dir <- "/export/valenfs/data/processed_data/experiment_tables_for_R/" # Where to save the ORFik experiments
+experiment.dir <- "/data/processed_data/experiment_tables_for_R/" # Where to save the ORFik experiments
 exp.name.CAGE <- "zf_nepal"; exp.name.RFP <- "zf_Chew13"; exp.name.RNA <- "zf_Chew_RNA" # Names for ORFik experiments, something informative
 if (!file.exists(paste0(experiment.dir, exp.name.RNA, ".csv"))) { # Do this only once!
   # First input gtf and genome
-  gtf.file <- "/export/valenfs/data/references/Zv10_zebrafish/Danio_rerio.GRCz10.81_chr.gtf.db" # GTF for organism
-  genome.file <- "/export/valenfs/data/references/Zv10_zebrafish/Danio_rerio.GRCz10.fa" # Fasta genome for organism
+  gtf.file <- "/data/references/Zv10_zebrafish/Danio_rerio.GRCz10.81_chr.gtf.db" # GTF for organism
+  genome.file <- "/data/references/Zv10_zebrafish/Danio_rerio.GRCz10.fa" # Fasta genome for organism
 
   # CAGE (Cap Analysis Gene Expression) (dir is folder with CAGE libraries)
-  create.experiment(dir = "/export/valenfs/data/processed_data/CAGE/nepal_2013_zebrafish/final_results/aligned_GRCz10",
+  create.experiment(dir = "/data/processed_data/CAGE/nepal_2013_zebrafish/final_results/aligned_GRCz10",
                     exper = exp.name.CAGE,
                     txdb = gtf.file, fa = genome.file, saveDir = experiment.dir)
   df.cage <- read.experiment(paste0(experiment.dir, exp.name.CAGE)) # If this works, you made a valid experiment
   simpleLibs(df.cage, addScoreColumn = TRUE, addSizeColumn = FALSE, method = "5prime"); remove.experiments(df.cage)
   # RFP (Ribo-seq)
-  create.experiment(dir = "/export/valenfs/data/processed_data/Ribo-seq/chew_2013_zebrafish/final_results/aligned_GRCz10",
+  create.experiment(dir = "/data/processed_data/Ribo-seq/chew_2013_zebrafish/final_results/aligned_GRCz10",
                     exper = exp.name.RFP, type = "bam",
                     txdb = gtf.file, fa = genome.file, saveDir = experiment.dir)
   df.rfp <- read.experiment(paste0(experiment.dir, exp.name.RFP))
   shiftFootprintsByExperiment(df.rfp, output_format = "bedo", accepted.lengths = 25:30) # pick different read lengths if you want
   # RNA (mRNA-seq)
-  create.experiment(dir = "/export/valenfs/data/processed_data/RNA-seq/chew_2013_and_pauli_2012_zebrafish/final_results/aligned_GRCz10/sorted",
+  create.experiment(dir = "/data/processed_data/RNA-seq/chew_2013_and_pauli_2012_zebrafish/final_results/aligned_GRCz10/sorted",
                     exper = exp.name.RNA,
                     txdb = gtf.file, fa = genome.file, saveDir = experiment.dir)
   df.rna <- read.experiment(paste0(experiment.dir, exp.name.RNA))
@@ -82,20 +85,12 @@ if (!file.exists(paste0(experiment.dir, exp.name.RNA, ".csv"))) { # Do this only
 }
 ```
 
+# Loading and subsetting ORFik experiments
+This part will vary according to what your experiments looks like, here I pick 3 stages to use
+We subset to only do analysis on 3 stages: fertilized(AKA. 2to4 cells stage), Dome and Shield.
 
-
-# Preparing NGS data and annotation as ORFik experiment
-Here we subset to only do analysis on 3 stages: fertilized(2to4 cells stage), Dome and Shield.
-
-You need to set these parameters in the orfikDirs function:
-1. mainPath: the directory to use for uORFomePipe results
-2. df.rfp, df.rna, df.cage: the Ribo-seq, RNA-seq and CAGE ORFik experiments
-3. organism: For GO analysis we need to know which organism this is (scientific name)
 ```r
-#¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
-# INIT (START HERE)
-#¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
-{ # This part will vary according to what your experiments looks like, here I pick 3 stages to use
+{ 
   # Load experiments
   df.cage <- read.experiment(paste0(experiment.dir, exp.name.CAGE)) #(df.cage <- NULL if you don't use CAGE)
   df.rfp  <- read.experiment(paste0(experiment.dir, exp.name.RFP))
@@ -106,15 +101,10 @@ You need to set these parameters in the orfikDirs function:
   df.rfp <- df.rfp[df.rfp$stage %in% stages & df.rfp$condition %in% conditions,]
   df.rna <- df.rna[df.rna$stage %in% stages & df.rna$condition %in% conditions,]
   df.cage <- df.cage[df.cage$stage %in% stages & df.cage$condition %in% conditions,]; df.cage[1,2] <- df.rna$stage[1]
-
-  orfikDirs(mainPath = "/export/valenfs/projects/Hakon/uORFome_zebrafish",
-            df.rfp, df.rna, df.cage,
-            organism = "Danio rerio") # <- scientific name for organism, will let you know if you misspelled
 }
 ```
-If the function orfikDirs does not give you an error, you are good to go.
 
-The experiments run here will be of given ORFik experiments:
+This is how the experiments look like:
 ```r
 > df.cage
 experiment: zf_nepal with 1 library type and 4 runs 
@@ -141,6 +131,41 @@ experiment: zf_Chew_RNA with 1 library type and 3 runs
 
 You see that you don't need equal amount of CAGE files (4 of them) to RNA-seq / Ribo-seq (3 of them),
 as long as the tissue / stage is equal. 
+# Running uORFomePipe
+
+You need to set these parameters in the find_uORFome function:
+1. mainPath: the directory to use for uORFomePipe results
+2. df.rfp, df.rna, df.cage: the Ribo-seq, RNA-seq and CAGE ORFik experiments
+3. organism: For GO analysis we need to know which organism this is (scientific name)
+4. Start and stop codons wanted, like startCodons = c("ATG"|"CTG"|"TTG") etc.
+To run simply do:
+```r
+find_uORFome(mainPath = "~/results/uORFome_zebrafish",
+             organism = "Danio rerio", # <- scientific name for organism, will let you know if you misspelled
+             df.rfp, df.rna, df.cage,
+             startCodons, stopCodons)
+```
+             
+Next I will describe each step in more detail that happens inside find_uORFome:
+
+# Initializing uORFomePipe
+First of the pipeline is initialized by verify all input, creating directories and database.
+These parameters needs to be set in the orfikDirs function:
+1. mainPath: the directory to use for uORFomePipe results
+2. df.rfp, df.rna, df.cage: the Ribo-seq, RNA-seq and CAGE ORFik experiments
+3. organism: For GO analysis we need to know which organism this is (scientific name)
+
+```r
+#¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
+# INIT (STARTS HERE)
+#¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
+
+
+orfikDirs(mainPath = "~/results/uORFome_zebrafish",
+          df.rfp, df.rna, df.cage,
+          organism = "Danio rerio") # <- scientific name for organism, will let you know if you misspelled
+```
+If the function orfikDirs does not give you an error, you are good to go.
 
 # Creating the uORF features used for prediction
 
@@ -183,7 +208,7 @@ Run the prediction, you get a h2o model per tissue / stage
 prediction <- predictUorfs()
 ```
 # Analysis
-Here you can do analysis, some predefined analysis function are included, you can work on the results 
+Lastly, the analysis. Some predefined analysis function are included, you can work on the results 
 as you want.
 ```r
 #¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
@@ -211,28 +236,28 @@ Here is the full script you can modify for your needs:
 library(uORFomePipe)
 
 # Input data experiment creation
-experiment.dir <- "/export/valenfs/data/processed_data/experiment_tables_for_R/" # Where to save the ORFik experiments
+experiment.dir <- "/data/processed_data/experiment_tables_for_R/" # Where to save the ORFik experiments
 
-if (0) { # Do this only once!
+if (!file.exists(paste0(experiment.dir, "zf_Chew_RNA.csv"))) { # Do this only once!
   # First input gtf and genome
-  gtf.file <- "/export/valenfs/data/references/Zv10_zebrafish/Danio_rerio.GRCz10.81_chr.gtf" # GTF for organism
-  genome.file <- "/export/valenfs/data/references/Zv10_zebrafish/Danio_rerio.GRCz10.fa" # Fasta genome for organism
+  gtf.file <- "/data/references/Zv10_zebrafish/Danio_rerio.GRCz10.81_chr.gtf" # GTF for organism
+  genome.file <- "/data/references/Zv10_zebrafish/Danio_rerio.GRCz10.fa" # Fasta genome for organism
   
 
   # CAGE (Cap Analysis Gene Expression)
-  create.experiment(dir = "/export/valenfs/data/processed_data/CAGE/nepal_2013_zebrafish/final_results/aligned_GRCz10",
+  create.experiment(dir = "/data/processed_data/CAGE/nepal_2013_zebrafish/final_results/aligned_GRCz10",
                     exper = "zf_nepal",
                     txdb = gtf.file, fa = genome.file, saveDir = experiment.dir)
   df.cage <- read.experiment(paste0(experiment.dir, "zf_nepal")) # If this works, you made a valid experiment
   simpleLibs(df.cage, addScoreColumn = TRUE, addSizeColumn = FALSE, method = "5prime"); remove.experiments(df.cage)
   # RFP (Ribo-seq)
-  create.experiment(dir = "/export/valenfs/data/processed_data/Ribo-seq/chew_2013_zebrafish/final_results/aligned_GRCz10",
+  create.experiment(dir = "/data/processed_data/Ribo-seq/chew_2013_zebrafish/final_results/aligned_GRCz10",
                     exper = "zf_Chew13", type = "bam",
                     txdb = gtf.file, fa = genome.file, saveDir = experiment.dir)
   df.rfp <- read.experiment(paste0(experiment.dir, "zf_Chew13"))
   shiftFootprintsByExperiment(df.rfp, output_format = "bedo", accepted.lengths = 25:30) # pick different read lengths if you want
   # RNA (mRNA-seq)
-  create.experiment(dir = "/export/valenfs/data/processed_data/RNA-seq/chew_2013_and_pauli_2012_zebrafish/final_results/aligned_GRCz10/sorted",
+  create.experiment(dir = "/data/processed_data/RNA-seq/chew_2013_and_pauli_2012_zebrafish/final_results/aligned_GRCz10/sorted",
                      exper = "zf_Chew_RNA",
                      txdb = gtf.file, fa = genome.file, saveDir = experiment.dir)
   df.rna <- read.experiment(paste0(experiment.dir, "zf_Chew_RNA"))
@@ -241,8 +266,7 @@ if (0) { # Do this only once!
 #¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
 # INIT (START HERE)
 #¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
-{ # This part will vary according to what your experiments looks like, here I pick 3 stages to use
-  # Load experiments
+{ # Load experiments (subset to 3 stages)
   df.cage <- read.experiment(paste0(experiment.dir, "zf_nepal"))
   df.rfp  <- read.experiment(paste0(experiment.dir, "zf_Chew13")) # RNA-seq is optional, but makes results better
   df.rna  <- read.experiment(paste0(experiment.dir, "zf_Chew_RNA"))
@@ -252,53 +276,20 @@ if (0) { # Do this only once!
   df.rfp <- df.rfp[df.rfp$stage %in% stages & df.rfp$condition %in% conditions,]
   df.rna <- df.rna[df.rna$stage %in% stages & df.rna$condition %in% conditions,]
   df.cage <- df.cage[df.cage$stage %in% stages & df.cage$condition %in% conditions,]; df.cage[1,2] <- df.rna$stage[1]
-
-  orfikDirs(mainPath = "/export/valenfs/projects/Hakon/uORFome_zebrafish",
-            df.rfp, df.rna, df.cage,
-            organism = "Danio rerio") # <- scientific name for organism, will let you know if you misspelled
+  
+  # Start and stop codons used
+  startCodons = "ATG|CTG|TTG|GTG|AAG|AGG|ACG|ATC|ATA|ATT"
+  stopCodons = "TAA|TAG|TGA"
+  
+  # Run 
+  find_uORFome(mainPath = "~/results/uORFome_zebrafish",
+             organism = "Danio rerio", # <- scientific name for organism, will let you know if you misspelled
+             df.rfp, df.rna, df.cage,
+             startCodons, stopCodons)
 }
 
-#¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
-# 2. Find uORF search region per CAGE
-#¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
-getLeadersFromCage(df.cage)
-
-#¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
-# 3. Find candidate uORFs per CAGE
-#¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
-getCandidateuORFs(startCodons = "ATG|CTG|TTG|GTG|AAG|AGG|ACG|ATC|ATA|ATT",
-                  stopCodons = "TAA|TAG|TGA")
-
-#¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
-# 4. make uorf IDs (to get unique identifier per uORF)
-#¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
-getIDsFromUorfs()
-
-#¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
-# 5. CAGE atlas per tissue and uORF / cage leader objects
-#¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
-createCatalogueDB(df.cage)
-#¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
-# 6. Find sequence, Ribo-seq and RNA-seq features for training model
-#¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
-
-makeTrainingAndPredictionData(df.rfp, df.rna, organism = organism)
-
-#¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
-# 7. Predict uORFs
-#¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
-# Either split tissues, or use argument "all" for all combined
-prediction <- predictUorfs()
 
 
-#¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
-# 8. Analysis
-#¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
-# CAGE usage analysis
-predictionVsCageHits()
-
-# Feature analysis
-featureAnalysis(prediction, tissue = "Shield")
 ```  
 
 #### Feedback

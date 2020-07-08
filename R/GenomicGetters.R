@@ -54,6 +54,33 @@ getCDS <- function(assignIt = TRUE,
   }
 }
 
+#' Get CDS that were filtered
+#'
+#' With valid width modulus length, start and stop codons used
+#' @inheritParams getTx
+#' @return GRangesList of all CDS used
+getCDSFiltered <- function(dataFolder = get("dataFolder", envir = .GlobalEnv)) {
+  return(readRDS(p(dataFolder, "/cds_filtered.rds")))
+}
+
+#' Get CDS used for positive training set
+#' @param mode "uORF", or "aCDS"
+#' @inheritParams getTx
+#' @return GRangesList of CDS used for training
+getCDSTraining <- function(mode = "uORF",
+                           dataFolder = get("dataFolder", envir = .GlobalEnv)) {
+  if (mode == "uORF") {
+    return(getCDSFiltered(dataFolder))
+  } else if (mode %in% c("aCDS", "CDS")) {
+    if (file.exists(p(dataFolder, "/cds_training.rds"))) {
+      return(readRDS(p(dataFolder, "/cds_training.rds")))
+    } else stop("Could not find training data for CDS")
+
+  } else stop("mode must be uORF, CDS or aCDS")
+}
+
+
+
 #' Get the 3' sequences from the gtf file
 #' @inheritParams getTx
 getThreeUTRs <- function(dataFolder = get("dataFolder", envir = .GlobalEnv)){

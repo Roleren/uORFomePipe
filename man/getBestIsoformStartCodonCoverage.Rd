@@ -4,7 +4,15 @@
 \alias{getBestIsoformStartCodonCoverage}
 \title{A filter per stop codon group}
 \usage{
-getBestIsoformStartCodonCoverage(tissue, cdsAndThree = FALSE)
+getBestIsoformStartCodonCoverage(tissue, cdsAndThree = FALSE, mode)
+}
+\arguments{
+\item{cdsAndThree}{logical, default: FALSE, that is run of uORFs, if TRUE
+run for cds and trailers.}
+}
+\value{
+list of length 1 or 2, (2 if cdsAndThree is TRUE),
+list contains numeric vectors of best start codons by coverage.
 }
 \description{
 Uses the ribo-seq libraries for ribo-seq validation

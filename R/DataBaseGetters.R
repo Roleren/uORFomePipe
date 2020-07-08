@@ -70,17 +70,25 @@ removeIDColumns <- function(dt){
 }
 
 #' get the uorfs in the database
-#' @param withExons should the uorfs be splitted by exons
-#' @param withTranscripts should the uorfs have transcript information,
+#' @param withExons logical, default TRUE, should the uorfs be splitted by exons
+#' @param withTranscripts logical, default TRUE, should the uorfs have transcript information,
 #' warning, this will duplicate some uorfs.
+#' @param uniqueORFs logical, default TRUE, only unique
+#' @param tissue character, only applicable when mode is "aCDS"
 #' @return a GRangesList or data.table, if(F, F)
 #' @export
-getUorfsInDb <- function(withExons = T, withTranscripts = T, uniqueORFs = T) {
+getUorfsInDb <- function(withExons = T, withTranscripts = T, uniqueORFs = T,
+                         mode = "uORF") {
   dataFolder <- get("dataFolder", envir = .GlobalEnv)
   if (withExons && withTranscripts) {
     if(uniqueORFs) {
-      if (file.exists(p(dataFolder, "/uniqueUorfsAsGRWithTx.rdata"))) {
-        load(p(dataFolder, "/uniqueUorfsAsGRWithTx.rdata"))
+      file <-  if (mode == "CDS") {
+        p(dataFolder, "/uniqueUorfsAsGRWithTx_verify", ".rdata")
+      } else {
+        file <- p(dataFolder, "/uniqueUorfsAsGRWithTx", ".rdata")
+      }
+      if (file.exists(file)) {
+        load(file)
         return(grl)
       } else stop("unique uorfs with tx does not exists")
     }

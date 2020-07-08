@@ -6,20 +6,25 @@
 #' @param hits a logical vector of TRUE, FALSE (TRUE is predicted)
 #' @param tissue default NULL, or a character name of tissue to print
 #' @export
-startCodonMetrics <- function(hits, tissue = NULL) {
-  if (!is.null(tissue)) message(p("Start codon distribution for tissue", tissue))
+startCodonMetrics <- function(hits, tissue = NULL,
+                              StartCodons = getAllSequenceFeaturesTable()$StartCodons) {
+  if (!is.null(tissue)) message(p("Start codon distribution for tissue: ", tissue))
+  if (sum(hits) == 0) {
+    warning("No ORFs predicted as active, check your input data!")
+    return(invisible(NULL))
+  }
   message("0 is downregulated, 1 is upregulated by chi.sq test")
-  uorfData <- getAllSequenceFeaturesTable()
   ySeq <- rep(0, length(hits))
   ySeq[hits] <- 1
-  StartResultsSequences <- chisq.test(table(data.frame(uorfData$StartCodons, prediction = as.factor(ySeq))))
+  StartResultsSequences <- chisq.test(table(data.frame(StartCodons, prediction = as.factor(ySeq))))
   res <- round(StartResultsSequences$residuals,1)
   res <- res[order(res[,2],decreasing = T),]
-  count <- table(uorfData$StartCodons[hits])[rownames(res)]
-  relativeCount <- round(table(uorfData$StartCodons[hits])/sum(hits), 2)[rownames(res)]
+  count <- table(StartCodons[hits])[rownames(res)]
+  relativeCount <- round(table(StartCodons[hits])/sum(hits), 2)[rownames(res)]
   res <- cbind(res, relative = round(res[,2]/max(res[,2]), 2), count, relativeCount)
   print(paste("number of uORFs predicted translated:", sum(hits)))
   print(res)
+  return(invisible(NULL))
 }
 
 #' General feature analysis

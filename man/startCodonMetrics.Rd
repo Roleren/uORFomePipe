@@ -4,7 +4,11 @@
 \alias{startCodonMetrics}
 \title{Get start codon bias usage}
 \usage{
-startCodonMetrics(hits, tissue = NULL)
+startCodonMetrics(
+  hits,
+  tissue = NULL,
+  StartCodons = getAllSequenceFeaturesTable()$StartCodons
+)
 }
 \arguments{
 \item{hits}{a logical vector of TRUE, FALSE (TRUE is predicted)}

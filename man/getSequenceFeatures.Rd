@@ -12,14 +12,22 @@ getSequenceFeatures(
 )
 }
 \arguments{
-\item{organism}{scientifi name, example "Homo sapiens" or "Danio rerio"}
+\item{organism}{scientific name of organism,
+like Homo sapiens, Danio rerio, etc.}
 
-\item{biomart}{name of biomart for organism, example "hsapiens_gene_ensembl"}
+\item{biomart}{default "ensembl", will then be automaticly detected by
+organism name in ensembl database. Set to NULL if you don't want to check
+Gene symbols and GO terms.}
 
-\item{grl}{the orfs as GRangesList}
+\item{grl}{the orfs as GRangesList, default uORFomePipe:::getUorfsInDb()}
 
-\item{mode}{character, default: "uORF", alternative: "ORF".
-or "drerio_gene_ensembl"}
+\item{mode}{character, default: "uORF". alternative "aCDS". Do you want to predict
+on uORFs or artificial CDS. if "aCDS" will run twice once for whole length CDS and one for
+truncated CDS to validate model works for short ORFs. "CDS" is option to predict on
+whole CDS.}
+}
+\value{
+return(invisible(NULL)
 }
 \description{
 Get sequence features from orfik

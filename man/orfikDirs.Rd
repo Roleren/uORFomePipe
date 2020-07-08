@@ -2,7 +2,7 @@
 % Please edit documentation in R/Init.R
 \name{orfikDirs}
 \alias{orfikDirs}
-\title{Init uORFome}
+\title{Init uORFome pipeline}
 \usage{
 orfikDirs(
   mainPath,
@@ -10,8 +10,10 @@ orfikDirs(
   df.rna,
   df.cage,
   organism,
-  biomart = "not_decided",
-  mode = "uORF"
+  biomart = "ensembl",
+  mode = "uORF",
+  startCodons.cds.allowed = c("ATG", "CTG", "TTG", "AAG", "AGG"),
+  stopCodons.cds.allowed = c("TAA", "TGA", "TAG")
 )
 }
 \arguments{
@@ -21,16 +23,25 @@ orfikDirs(
 
 \item{df.rna}{ORFik experiment of RNA-seq}
 
-\item{df.cage}{ORFik experiment of CAGE}
+\item{df.cage}{ORFik experiment of CAGE, set to NULL if you don't have CAGE.}
 
 \item{organism}{scientific name of organism,
 like Homo sapiens, Danio rerio, etc.}
 
-\item{biomart}{default "not_decided" will be automaticly detected by
-organism name. Set it if you know.}
+\item{biomart}{default "ensembl", will then be automaticly detected by
+organism name in ensembl database. Set to NULL if you don't want to check
+Gene symbols and GO terms.}
 
-\item{mode}{character, default: "uORF". alternative "ORF". Do you want to predict
-on uORFs or ORFs (CDS etc.)}
+\item{mode}{character, default: "uORF". alternative "aCDS". Do you want to predict
+on uORFs or artificial CDS. if "aCDS" will run twice once for whole length CDS and one for
+truncated CDS to validate model works for short ORFs. "CDS" is option to predict on
+whole CDS.}
+
+\item{startCodons.cds.allowed}{character, default same as startCodons argument.
+Which start codons can the CDS you train on have ?}
+
+\item{stopCodons.cds.allowed}{character, default same as stopCodons argument
+Which stop codons can the CDS you train on have ?}
 
 \item{dataFolder}{ORFik experiment that contains Annotation}
 
@@ -38,6 +49,13 @@ on uORFs or ORFs (CDS etc.)}
 to predict translated uORFs}
 }
 \description{
-Make directoy structure for orf finding
-The main Path is ./.. relative to RCode1/ location
+Make directory structure for orf finding, create database
+assign variables and validate input data.
+}
+\details{
+Debug possibility: \cr
+If you get this error: \cr
+ Error in bmRequest(request = request, verbose = verbose) :\cr
+ Internal Server Error (HTTP 500). \cr
+Rerun and it should work, this is a port issue.
 }
