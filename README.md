@@ -60,9 +60,13 @@ library(uORFomePipe)
 # Make names (identifier for each library type)
 exp.name.CAGE <- "zf_nepal"
 exp.name.RFP <- "zf_Chew13"
-exp.name.RNA <- "zf_Chew_RNA" 
+exp.name.RNA <- "zf_Chew_RNA"
 
-if (!file.exists(paste0(experiment.dir, exp.name.RNA, ".csv"))) { # Create experiments only once!
+# Now Check if you have already done this
+exp_exists <- list.experiments(pattern = paste(exp.name.CAGE, exp.name.RFP, exp.name.RNA, sep = "|"))
+exp_exists <- nrow(exp_exists) == 3 # all 3 defined already
+
+if (!exp_exists) { # Create experiments only once!
   # First input gtf and genome
   gtf.file <- "/data/references/Zv10_zebrafish/Danio_rerio.GRCz10.81_chr.gtf.db" # GTF for organism
   genome.file <- "/data/references/Zv10_zebrafish/Danio_rerio.GRCz10.fa" # Fasta genome for organism
@@ -72,7 +76,8 @@ if (!file.exists(paste0(experiment.dir, exp.name.RNA, ".csv"))) { # Create exper
                     exper = exp.name.CAGE,
                     txdb = gtf.file, fa = genome.file)
   df.cage <- read.experiment(exp.name.CAGE) # If this works, you made a valid experiment
-  simpleLibs(df.cage, addScoreColumn = TRUE, addSizeColumn = FALSE, method = "5prime"); remove.experiments(df.cage)
+  # Collapse CAGE reads at same position, make score column and subset to 5' ends
+  convertLibs(df.cage, addScoreColumn = TRUE, addSizeColumn = FALSE, method = "5prime"); remove.experiments(df.cage)
   # RFP (Ribo-seq)
   create.experiment("/data/processed_data/Ribo-seq/chew_2013_zebrafish/final_results/aligned_GRCz10",
                     exper = exp.name.RFP, type = "bam",
@@ -85,7 +90,7 @@ if (!file.exists(paste0(experiment.dir, exp.name.RNA, ".csv"))) { # Create exper
   "/data/processed_data/RNA-seq/chew_2013_and_pauli_2012_zebrafish/final_results/aligned_GRCz10/sorted",
                     exper = exp.name.RNA, txdb = gtf.file, fa = genome.file)
   df.rna <- read.experiment(exp.name.RNA)
-  convertLibs(df.rna, addScoreColumn = TRUE); remove.experiments(df.rna)
+  convertLibs(df.rna, addScoreColumn = TRUE, type = "bedo"); remove.experiments(df.rna)
 }
 ```
 
@@ -246,7 +251,11 @@ exp.name.CAGE <- "zf_nepal"
 exp.name.RFP <- "zf_Chew13"
 exp.name.RNA <- "zf_Chew_RNA" 
 
-if (!file.exists(paste0(experiment.dir, exp.name.RNA, ".csv"))) { # Create experiments only once!
+# Now Check if you have already done this
+exp_exists <- list.experiments(pattern = paste(exp.name.CAGE, exp.name.RFP, exp.name.RNA, sep = "|"))
+exp_exists <- nrow(exp_exists) == 3 # all 3 defined already
+
+if (!exp_exists) { # Create experiments only once!
   # First input gtf and genome
   gtf.file <- "/data/references/Zv10_zebrafish/Danio_rerio.GRCz10.81_chr.gtf.db" # GTF for organism
   genome.file <- "/data/references/Zv10_zebrafish/Danio_rerio.GRCz10.fa" # Fasta genome for organism
@@ -256,7 +265,8 @@ if (!file.exists(paste0(experiment.dir, exp.name.RNA, ".csv"))) { # Create exper
                     exper = exp.name.CAGE,
                     txdb = gtf.file, fa = genome.file)
   df.cage <- read.experiment(exp.name.CAGE) # If this works, you made a valid experiment
-  simpleLibs(df.cage, addScoreColumn = TRUE, addSizeColumn = FALSE, method = "5prime"); remove.experiments(df.cage)
+  # Collapse CAGE reads at same position, make score column and subset to 5' ends
+  convertLibs(df.cage, addScoreColumn = TRUE, addSizeColumn = FALSE, method = "5prime"); remove.experiments(df.cage)
   # RFP (Ribo-seq)
   create.experiment("/data/processed_data/Ribo-seq/chew_2013_zebrafish/final_results/aligned_GRCz10",
                     exper = exp.name.RFP, type = "bam",
@@ -269,7 +279,7 @@ if (!file.exists(paste0(experiment.dir, exp.name.RNA, ".csv"))) { # Create exper
   "/data/processed_data/RNA-seq/chew_2013_and_pauli_2012_zebrafish/final_results/aligned_GRCz10/sorted",
                     exper = exp.name.RNA, txdb = gtf.file, fa = genome.file)
   df.rna <- read.experiment(exp.name.RNA)
-  convertLibs(df.rna, addScoreColumn = TRUE); remove.experiments(df.rna)
+  convertLibs(df.rna, addScoreColumn = TRUE, type = "bedo"); remove.experiments(df.rna)
 }
 #¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
 # INIT (START HERE)
