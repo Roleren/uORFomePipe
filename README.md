@@ -160,7 +160,7 @@ find_uORFome(mainPath = "~/results/uORFome_zebrafish",
 Next I will describe each step in more detail that happens inside find_uORFome:
 
 # Initializing uORFomePipe
-First of the pipeline is initialized by verify all input, creating directories and database.
+First of the pipeline is initialized by verifying all input, creating directories and database.
 These parameters needs to be set in the orfikDirs function:
 1. mainPath: the directory to use for uORFomePipe results
 2. df.rfp, df.rna, df.cage: the Ribo-seq, RNA-seq and CAGE ORFik experiments
