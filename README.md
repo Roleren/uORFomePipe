@@ -57,9 +57,12 @@ library(uORFomePipe)
 #¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
 # Create experiments (1. CAGE, 2. Ribo-seq (RFP) and 3. RNA-seq (RNA))
 #¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
-experiment.dir <- "/data/processed_data/experiment_tables_for_R/" # Where to save the ORFik experiments
-exp.name.CAGE <- "zf_nepal"; exp.name.RFP <- "zf_Chew13"; exp.name.RNA <- "zf_Chew_RNA" # Names for ORFik experiments, something informative
-if (!file.exists(paste0(experiment.dir, exp.name.RNA, ".csv"))) { # Do this only once!
+# Make names (identifier for each library type)
+exp.name.CAGE <- "zf_nepal"
+exp.name.RFP <- "zf_Chew13"
+exp.name.RNA <- "zf_Chew_RNA" 
+
+if (!file.exists(paste0(experiment.dir, exp.name.RNA, ".csv"))) { # Create experiments only once!
   # First input gtf and genome
   gtf.file <- "/data/references/Zv10_zebrafish/Danio_rerio.GRCz10.81_chr.gtf.db" # GTF for organism
   genome.file <- "/data/references/Zv10_zebrafish/Danio_rerio.GRCz10.fa" # Fasta genome for organism
@@ -67,34 +70,35 @@ if (!file.exists(paste0(experiment.dir, exp.name.RNA, ".csv"))) { # Do this only
   # CAGE (Cap Analysis Gene Expression) (dir is folder with CAGE libraries)
   create.experiment(dir = "/data/processed_data/CAGE/nepal_2013_zebrafish/final_results/aligned_GRCz10",
                     exper = exp.name.CAGE,
-                    txdb = gtf.file, fa = genome.file, saveDir = experiment.dir)
-  df.cage <- read.experiment(paste0(experiment.dir, exp.name.CAGE)) # If this works, you made a valid experiment
+                    txdb = gtf.file, fa = genome.file)
+  df.cage <- read.experiment(exp.name.CAGE) # If this works, you made a valid experiment
   simpleLibs(df.cage, addScoreColumn = TRUE, addSizeColumn = FALSE, method = "5prime"); remove.experiments(df.cage)
   # RFP (Ribo-seq)
-  create.experiment(dir = "/data/processed_data/Ribo-seq/chew_2013_zebrafish/final_results/aligned_GRCz10",
+  create.experiment("/data/processed_data/Ribo-seq/chew_2013_zebrafish/final_results/aligned_GRCz10",
                     exper = exp.name.RFP, type = "bam",
-                    txdb = gtf.file, fa = genome.file, saveDir = experiment.dir)
-  df.rfp <- read.experiment(paste0(experiment.dir, exp.name.RFP))
-  shiftFootprintsByExperiment(df.rfp, output_format = "bedo", accepted.lengths = 25:30) # pick different read lengths if you want
+                    txdb = gtf.file, fa = genome.file)
+  df.rfp <- read.experiment(exp.name.RFP)
+  # p-site detection & pshifting: pick different read lengths if you want
+  shiftFootprintsByExperiment(df.rfp, accepted.lengths = 25:30) 
   # RNA (mRNA-seq)
-  create.experiment(dir = "/data/processed_data/RNA-seq/chew_2013_and_pauli_2012_zebrafish/final_results/aligned_GRCz10/sorted",
-                    exper = exp.name.RNA,
-                    txdb = gtf.file, fa = genome.file, saveDir = experiment.dir)
-  df.rna <- read.experiment(paste0(experiment.dir, exp.name.RNA))
-  simpleLibs(df.rna, addScoreColumn = TRUE, addSizeColumn = FALSE); remove.experiments(df.rna)
+  create.experiment(
+  "/data/processed_data/RNA-seq/chew_2013_and_pauli_2012_zebrafish/final_results/aligned_GRCz10/sorted",
+                    exper = exp.name.RNA, txdb = gtf.file, fa = genome.file)
+  df.rna <- read.experiment(exp.name.RNA)
+  convertLibs(df.rna, addScoreColumn = TRUE); remove.experiments(df.rna)
 }
 ```
 
 # Loading and subsetting ORFik experiments
 This part will vary according to what your experiments looks like, here I pick 3 stages to use
-We subset to only do analysis on 3 stages: fertilized(AKA. 2to4 cells stage), Dome and Shield.
+We subset to only do analysis on 3 stages: fertilized (AKA. 2to4 cells stage), Dome and Shield.
 
 ```r
 { 
-  # Load experiments
-  df.cage <- read.experiment(paste0(experiment.dir, exp.name.CAGE)) #(df.cage <- NULL if you don't use CAGE)
-  df.rfp  <- read.experiment(paste0(experiment.dir, exp.name.RFP))
-  df.rna  <- read.experiment(paste0(experiment.dir, exp.name.RNA))
+  # Load experiments (subset to 3 stages)
+  df.cage <- read.experiment(exp.name.CAGE) 
+  df.rfp  <- read.experiment(exp.name.RFP)
+  df.rna  <- read.experiment(exp.name.RNA)
   # Subset experiments to stages / tissues / conditions (groups) we want analysed (they must exist in all 3)
   conditions <- c("", NA) # Only empty conditions allowed (no mutants etc.)
   stages <- c("Dome","Shield", "2to4Cell", "fertilized") # 3 stages (we make 2to4 and fertilized as 1 stage)
@@ -137,13 +141,15 @@ You need to set these parameters in the find_uORFome function:
 1. mainPath: the directory to use for uORFomePipe results
 2. df.rfp, df.rna, df.cage: the Ribo-seq, RNA-seq and CAGE ORFik experiments
 3. organism: For GO analysis we need to know which organism this is (scientific name)
-4. Start and stop codons wanted, like startCodons = c("ATG"|"CTG"|"TTG") etc.
+4. Start and stop codons wanted, like startCodons = c("ATG", "CTG", "TTG") etc.
 To run simply do:
 ```r
 find_uORFome(mainPath = "~/results/uORFome_zebrafish",
-             organism = "Danio rerio", # <- scientific name for organism, will let you know if you misspelled
+             organism = "Danio rerio", 
              df.rfp, df.rna, df.cage,
-             startCodons, stopCodons)
+             startCodons = c("ATG", "CTG", "TTG"), 
+             stopCodons = c("TAA", "TGA", "TAG"))
+# scientific name for organism, will let you know if you misspelled
 ```
              
 Next I will describe each step in more detail that happens inside find_uORFome:
@@ -199,7 +205,7 @@ createCatalogueDB(df.cage)
 makeTrainingAndPredictionData(df.rfp, df.rna, organism = organism)
 ```
 # Prediction (when training data is ready)
-Run the prediction, you get a h2o model per tissue / stage
+Next step is the prediction, you get a h2o random forest model per tissue / stage
 ```r
 #¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
 # 7. Predict uORFs
@@ -236,43 +242,45 @@ Here is the full script you can modify for your needs:
 library(uORFomePipe)
 
 # Input data experiment creation
-experiment.dir <- "/data/processed_data/experiment_tables_for_R/" # Where to save the ORFik experiments
+exp.name.CAGE <- "zf_nepal"
+exp.name.RFP <- "zf_Chew13"
+exp.name.RNA <- "zf_Chew_RNA" 
 
-if (!file.exists(paste0(experiment.dir, "zf_Chew_RNA.csv"))) { # Do this only once!
+if (!file.exists(paste0(experiment.dir, exp.name.RNA, ".csv"))) { # Create experiments only once!
   # First input gtf and genome
-  gtf.file <- "/data/references/Zv10_zebrafish/Danio_rerio.GRCz10.81_chr.gtf" # GTF for organism
+  gtf.file <- "/data/references/Zv10_zebrafish/Danio_rerio.GRCz10.81_chr.gtf.db" # GTF for organism
   genome.file <- "/data/references/Zv10_zebrafish/Danio_rerio.GRCz10.fa" # Fasta genome for organism
-  
 
-  # CAGE (Cap Analysis Gene Expression)
+  # CAGE (Cap Analysis Gene Expression) (dir is folder with CAGE libraries)
   create.experiment(dir = "/data/processed_data/CAGE/nepal_2013_zebrafish/final_results/aligned_GRCz10",
-                    exper = "zf_nepal",
-                    txdb = gtf.file, fa = genome.file, saveDir = experiment.dir)
-  df.cage <- read.experiment(paste0(experiment.dir, "zf_nepal")) # If this works, you made a valid experiment
+                    exper = exp.name.CAGE,
+                    txdb = gtf.file, fa = genome.file)
+  df.cage <- read.experiment(exp.name.CAGE) # If this works, you made a valid experiment
   simpleLibs(df.cage, addScoreColumn = TRUE, addSizeColumn = FALSE, method = "5prime"); remove.experiments(df.cage)
   # RFP (Ribo-seq)
-  create.experiment(dir = "/data/processed_data/Ribo-seq/chew_2013_zebrafish/final_results/aligned_GRCz10",
-                    exper = "zf_Chew13", type = "bam",
-                    txdb = gtf.file, fa = genome.file, saveDir = experiment.dir)
-  df.rfp <- read.experiment(paste0(experiment.dir, "zf_Chew13"))
-  shiftFootprintsByExperiment(df.rfp, output_format = "bedo", accepted.lengths = 25:30) # pick different read lengths if you want
+  create.experiment("/data/processed_data/Ribo-seq/chew_2013_zebrafish/final_results/aligned_GRCz10",
+                    exper = exp.name.RFP, type = "bam",
+                    txdb = gtf.file, fa = genome.file)
+  df.rfp <- read.experiment(exp.name.RFP)
+  # p-site detection & pshifting: pick different read lengths if you want
+  shiftFootprintsByExperiment(df.rfp, accepted.lengths = 25:30) 
   # RNA (mRNA-seq)
-  create.experiment(dir = "/data/processed_data/RNA-seq/chew_2013_and_pauli_2012_zebrafish/final_results/aligned_GRCz10/sorted",
-                     exper = "zf_Chew_RNA",
-                     txdb = gtf.file, fa = genome.file, saveDir = experiment.dir)
-  df.rna <- read.experiment(paste0(experiment.dir, "zf_Chew_RNA"))
-  simpleLibs(df.rna, addScoreColumn = TRUE, addSizeColumn = FALSE); remove.experiments(df.rna)
+  create.experiment(
+  "/data/processed_data/RNA-seq/chew_2013_and_pauli_2012_zebrafish/final_results/aligned_GRCz10/sorted",
+                    exper = exp.name.RNA, txdb = gtf.file, fa = genome.file)
+  df.rna <- read.experiment(exp.name.RNA)
+  convertLibs(df.rna, addScoreColumn = TRUE); remove.experiments(df.rna)
 }
 #¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
 # INIT (START HERE)
 #¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
 { # Load experiments (subset to 3 stages)
-  df.cage <- read.experiment(paste0(experiment.dir, "zf_nepal"))
-  df.rfp  <- read.experiment(paste0(experiment.dir, "zf_Chew13")) # RNA-seq is optional, but makes results better
-  df.rna  <- read.experiment(paste0(experiment.dir, "zf_Chew_RNA"))
-  # Subset experiments to stages / tissues we want analysed (they must exist in all 3)
+  df.cage <- read.experiment(exp.name.CAGE) 
+  df.rfp  <- read.experiment(exp.name.RFP)
+  df.rna  <- read.experiment(exp.name.RNA)
+  # Subset experiments to stages / tissues / conditions (groups) we want analysed (they must exist in all 3)
   conditions <- c("", NA) # Only empty conditions allowed (no mutants etc.)
-  stages <- c("Dome","Shield", "2to4Cell", "fertilized") # 3 stages (we make 2to4 and fertilzed as 1 stage)
+  stages <- c("Dome","Shield", "2to4Cell", "fertilized") # 3 stages (we make 2to4 and fertilized as 1 stage)
   df.rfp <- df.rfp[df.rfp$stage %in% stages & df.rfp$condition %in% conditions,]
   df.rna <- df.rna[df.rna$stage %in% stages & df.rna$condition %in% conditions,]
   df.cage <- df.cage[df.cage$stage %in% stages & df.cage$condition %in% conditions,]; df.cage[1,2] <- df.rna$stage[1]
@@ -283,7 +291,7 @@ if (!file.exists(paste0(experiment.dir, "zf_Chew_RNA.csv"))) { # Do this only on
   
   # Run 
   find_uORFome(mainPath = "~/results/uORFome_zebrafish",
-             organism = "Danio rerio", # <- scientific name for organism, will let you know if you misspelled
+             organism = "Danio rerio",
              df.rfp, df.rna, df.cage,
              startCodons, stopCodons)
 }

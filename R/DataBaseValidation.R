@@ -12,6 +12,11 @@
 predictionVsCageHits <- function(saveName = p("differential_", mode, "_usage.png"), mode = "uORF") {
   if (!(mode %in% c("uORF", "CDS", "aCDS")))
     stop("mode must be uORF or CDS or aCDS (artificial CDS)")
+
+  themes.no.y <- theme(axis.text.y = element_text(size = 8),
+                       panel.grid.major.y = element_blank(),
+                       panel.grid.minor.y = element_blank())
+
   if (file.exists(paste0(dataFolder,"/tissueAtlas.rds"))) {
     cageTissues <- readRDS(paste0(dataFolder,"/tissueAtlas.rds"))[,-1]
     cageTissues$total <- rowSums(cageTissues) > 0
@@ -39,7 +44,8 @@ predictionVsCageHits <- function(saveName = p("differential_", mode, "_usage.png
       geom_bar(stat="identity", position =  position_stack(reverse = TRUE)) +
       xlab("Tissue")+ylab("# uORFs found by CAGE") +
       scale_y_continuous(labels = scales::scientific) +
-      theme(axis.text.y = element_text(size = 8)) +
+      theme_bw() +
+      themes.no.y +
       guides(fill=FALSE) +
       coord_flip()
   }
@@ -70,7 +76,8 @@ predictionVsCageHits <- function(saveName = p("differential_", mode, "_usage.png
     scale_y_continuous(labels = scales::scientific) +
     xlab("")+ylab(p("# predicted active ", mode, "s")) +
     guides() +
-    theme(axis.text.y = element_text(size = 8)) +
+    theme_bw() +
+    themes.no.y +
     coord_flip()
   if (file.exists(paste0(dataFolder,"/tissueAtlas.rds"))) {
     pred <- gridExtra::grid.arrange(cageAll, predAll, ncol = 2)
@@ -90,16 +97,16 @@ startAndStopCodonPlots <- function() {
   startAndStop <- data.table(StartCodons = factor(uorfData$StartCodons),
                              StopCodons = factor(uorfData$StopCodons),
                              prediction = cageTissuesPrediction$Matrix == 1)
-  x_size <- min(12, (14 / max(8, max(length(levels(startAndStop$StartCodons)), length(levels(startAndStop$StartCodons)))))*20)
+  x_size <- min(11, (14 / max(8, max(length(levels(startAndStop$StartCodons)), length(levels(startAndStop$StartCodons)))))*5)
 
   startCandidates <- ggplot(data = startAndStop, aes(StartCodons)) +
-    geom_bar(width = 0.3) + theme(axis.text.x = element_text(size = x_size))
+    geom_bar(width = 0.3) + theme_bw() + theme(axis.text.x = element_text(size = x_size))
   startPredicted <- ggplot(data = startAndStop[prediction == TRUE,], aes(StartCodons)) +
-    geom_bar(width = 0.3) + theme(axis.text.x = element_text(size = x_size))
+    geom_bar(width = 0.3) + theme_bw() + theme(axis.text.x = element_text(size = x_size))
   stopCandidates <- ggplot(data = startAndStop, aes(StopCodons)) +
-    geom_bar(width = 0.3) + theme(axis.text.x = element_text(size = x_size))
+    geom_bar(width = 0.3) + theme_bw() + theme(axis.text.x = element_text(size = x_size))
   stopPredicted <- ggplot(data = startAndStop[prediction == TRUE,], aes(StopCodons)) +
-    geom_bar(width = 0.3) + theme(axis.text.x = element_text(size = x_size))
+    geom_bar(width = 0.3) + theme_bw() + theme(axis.text.x = element_text(size = x_size))
   grid <- gridExtra::grid.arrange(startCandidates, startPredicted, stopCandidates,
                                   stopPredicted, ncol = 2, top = "Start and stop codon by total prediction")
   return(grid)
@@ -117,7 +124,7 @@ test.artificial <- function(artificial,
                             output,
                             original = artificial,
                             minimum.group.size = 30) {
-  dt <- verification.conf.matrix(artificial, output, original, minimum.group.size)
+  dt <- verification.conf.matrix(artificial, original, minimum.group.size)
   dt2 <- copy(dt)
   dt2 <- dt2[, .(true.positive.rate = sum(true.positive) / (sum(true.positive) + sum(false.negative)),
                  true.negative.rate = sum(true.negative) / (sum(false.positive) + sum(true.negative)),
