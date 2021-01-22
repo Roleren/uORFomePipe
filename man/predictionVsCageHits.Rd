@@ -6,7 +6,9 @@
 \usage{
 predictionVsCageHits(
   saveName = p("differential_", mode, "_usage.png"),
-  mode = "uORF"
+  mode = "uORF",
+  prediction = predictUorfs(mode = mode),
+  stop.codons = FALSE
 )
 }
 \arguments{
@@ -15,6 +17,10 @@ predictionVsCageHits(
 
 \item{mode}{character, default: "uORF". alternative "ORF" or what ever
 region you are checking.}
+
+\item{prediction}{data.table of prediction values in c(0, 1).}
+
+\item{stop.codons}{= FALSE, if TRUE add a row of stop codon plots}
 }
 \description{
 Shows max 20 tissues candidate and predicted uORF counts

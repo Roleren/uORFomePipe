@@ -6,15 +6,12 @@
 \usage{
 verification.conf.matrix(
   artificial,
-  output,
   original = artificial,
   minimum.group.size = 30
 )
 }
 \arguments{
 \item{artificial}{path to uORFomePipe run of artificial}
-
-\item{output}{path to save plot}
 
 \item{original}{path to uORFomePipe run of original}
 }

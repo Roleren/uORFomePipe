@@ -34,7 +34,7 @@
 #' # df.rna <- read.experiment("path/to/rna.csv")
 #' # df.cage <- read.experiment("path/to/CAGE.csv")
 #' # find_uORFome(mainPath, organism, df.rfp, df.rna, df.cage)
-find_uORFome <- function(mainPath, organism, df.rfp, df.rna, df.cage,
+find_uORFome <- function(mainPath, organism = organism.df(df.rfp), df.rfp, df.rna, df.cage,
                          startCodons = "ATG|CTG|TTG|GTG|AAG|AGG|ACG|ATC|ATA|ATT",
                          stopCodons = "TAA|TAG|TGA", mode = "uORF",
                          max.artificial.length = 100,
@@ -89,7 +89,7 @@ find_uORFome <- function(mainPath, organism, df.rfp, df.rna, df.cage,
   # 8. Analysis
   #¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
   # CAGE usage analysis (all tissues and total)
-  predictionVsCageHits(mode = mode)
+  predictionVsCageHits(prediction = prediction, mode = mode)
 
   # Feature analysis (Just on first tissue)
   featureAnalysis(prediction, tissue = readTable("experiment_groups")[[1]][1])

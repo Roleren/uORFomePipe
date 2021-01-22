@@ -6,7 +6,7 @@
 \usage{
 find_uORFome(
   mainPath,
-  organism,
+  organism = organism.df(df.rfp),
   df.rfp,
   df.rna,
   df.cage,
@@ -69,7 +69,8 @@ assign variables and validate input data.\cr
 8. Get analysis plots\cr
 \cr
 NOTE: IF it crashes it will continue from the point you quit, so delete the mainPath
-folder if you want fresh rerun.
+folder if you want fresh rerun.\cr Also do not change working directory after you
+started running, as this might make the program crash
 }
 \examples{
 mainPath <- "~/bio/results/uORFome_Zebrafish"

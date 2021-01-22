@@ -75,7 +75,7 @@ makeCombinedPrediction <- function(tissues, dataFolder = get("dataFolder", envir
 strongCDS <- function(coverage, fpkm, startCodonCoverage, startRegionRelative, ORFScore) {
   filter <- (coverage > min(quantile(coverage, 0.25), 10)) & (fpkm > max(1, quantile(fpkm, 0.15))) &
     (startCodonCoverage > quantile(startCodonCoverage, 0.75)) &
-    (startRegionRelative > 0.95) & (ORFScore > 1.0)
+    (startRegionRelative > 0.1) & (ORFScore > 1.0)
   return(filter)
 }
 

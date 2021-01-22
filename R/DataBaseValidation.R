@@ -6,16 +6,45 @@
 #' "differential_uORF_usage.png"
 #' @param mode character, default: "uORF". alternative "ORF" or what ever
 #' region you are checking.
+#' @inheritParams feature.boxplots
+#' @inheritParams startAndStopCodonPlots
 #' @import ggplot2
 #' @import gridExtra
+#' @import cowplot
 #' @export
-predictionVsCageHits <- function(saveName = p("differential_", mode, "_usage.png"), mode = "uORF") {
+predictionVsCageHits <- function(saveName = p("differential_", mode, "_usage.png"),
+                                 mode = "uORF",
+                                 prediction = predictUorfs(mode = mode),
+                                 stop.codons = FALSE) {
   if (!(mode %in% c("uORF", "CDS", "aCDS")))
     stop("mode must be uORF or CDS or aCDS (artificial CDS)")
+  message("--------------------------------------")
+  message("Creating result plots:")
+  pred <- uORFomePipe:::perSampleCountPlot(mode)
+  codons <- uORFomePipe:::startAndStopCodonPlots(stop.codons)
+  features <- uORFomePipe:::feature.boxplots(prediction)
+  lay <- rbind(1, 1, 2, 3, 3)
+  grid <- cowplot::plot_grid(pred, codons, features, ncol = 1,
+                     rel_heights = c(2, 1, 2),
+                     labels = c("A", "B", "C"), label_y = c(1, 1.1, 1.1))
+  # grid <- gridExtra::grid.arrange(top = paste0(mode," prediction"),
+  #                                 pred, codons, features,
+  #                                 layout_matrix = lay)
+  ggsave(saveName, grid, width = 220, height = 180, units = "mm", dpi = 300)
+  # Venn diagram
+  venn.diagram.uORFs()
+  return(invisible(NULL))
+}
 
+#' Per sample library plot overall counts
+#'
+#' Divide into active and candidate uORFs
+#' @inheritParams predictionVsCageHits
+perSampleCountPlot <- function(mode = "uORF") {
   themes.no.y <- theme(axis.text.y = element_text(size = 8),
                        panel.grid.major.y = element_blank(),
-                       panel.grid.minor.y = element_blank())
+                       panel.grid.minor.y = element_blank(),
+                       panel.grid.minor.x = element_blank())
 
   if (file.exists(paste0(dataFolder,"/tissueAtlas.rds"))) {
     cageTissues <- readRDS(paste0(dataFolder,"/tissueAtlas.rds"))[,-1]
@@ -39,15 +68,17 @@ predictionVsCageHits <- function(saveName = p("differential_", mode, "_usage.png
     df$type <- factor(df$type, levels = c("uORFs in all", "uORFs > 1", "uORFs unique"), ordered = TRUE)
     df$variable <- factor(df$variable, levels = df[, sum(value),
                                                    by = variable][order(V1),]$variable, ordered = TRUE)
+    df.cage.levels <- levels(df$variable)
     cageAll <- ggplot(df, aes(x=variable,y=value,fill=type)) +
-      scale_fill_manual(values = c("turquoise3", "brown1", "wheat3")) +
       geom_bar(stat="identity", position =  position_stack(reverse = TRUE)) +
-      xlab("Tissue")+ylab("# uORFs found by CAGE") +
+      scale_fill_manual(values = c("#009E73", "#0072B2", "#D55E00")) +
+      xlab("Stage")+ylab("Candidate uORFs by sequence") +
       scale_y_continuous(labels = scales::scientific) +
       theme_bw() +
       themes.no.y +
       guides(fill=FALSE) +
       coord_flip()
+    cageAll
   }
 
   # for prediction
@@ -68,13 +99,18 @@ predictionVsCageHits <- function(saveName = p("differential_", mode, "_usage.png
             rep(p(mode,"s > 1"), ncol(cageRed)), rep(p(mode,"s unique"), ncol(cageRed)))
   df <- data.table(value = values, variable, type)
   df$type <- factor(df$type, levels = c(p(mode,"s in all"), p(mode,"s > 1"), p(mode,"s unique")), ordered = TRUE)
-  df$variable <- factor(df$variable, levels = df[, sum(value),
-                                                 by = variable][order(V1),]$variable, ordered = TRUE)
+  if (exists("df.cage.levels")) {
+    df$variable <- factor(df$variable, levels = df.cage.levels, ordered = TRUE)
+  } else {
+    df$variable <- factor(df$variable, levels = df[, sum(value),
+                                                   by = variable][order(V1),]$variable, ordered = TRUE)
+  }
+
   predAll <- ggplot(df, aes(x=variable, y=value, fill=type)) +
     geom_bar(stat="identity", position =  position_stack(reverse = TRUE)) +
-    scale_fill_manual(values = c("turquoise3", "brown1", "wheat3")) +
+    scale_fill_manual(values = c("#009E73", "#0072B2", "#D55E00")) +
     scale_y_continuous(labels = scales::scientific) +
-    xlab("")+ylab(p("# predicted active ", mode, "s")) +
+    xlab("")+ylab(p("Predicted translated ", mode, "s")) +
     guides() +
     theme_bw() +
     themes.no.y +
@@ -82,15 +118,14 @@ predictionVsCageHits <- function(saveName = p("differential_", mode, "_usage.png
   if (file.exists(paste0(dataFolder,"/tissueAtlas.rds"))) {
     pred <- gridExtra::grid.arrange(cageAll, predAll, ncol = 2)
   } else pred <- predAll
-  codons <- uORFomePipe:::startAndStopCodonPlots()
-  grid <- gridExtra::grid.arrange(top = p(mode," prediction"), pred, codons, ncol = 1)
-  ggsave(saveName, grid, width = 200, units = "mm")
-  return(invisible(NULL))
+  return(pred)
 }
 
 #' Distribution of start and stop codon according to total prediction
+#' @param stop.codons = FALSE, if TRUE add a row of stop codon plots
+#' @importFrom ggplot2 theme_bw
 #' @import gridExtra
-startAndStopCodonPlots <- function() {
+startAndStopCodonPlots <- function(stop.codons = FALSE) {
   cageTissuesPrediction <- readTable("finalCAGEuORFPrediction")
   uorfData <- getAllSequenceFeaturesTable()
 
@@ -98,19 +133,130 @@ startAndStopCodonPlots <- function() {
                              StopCodons = factor(uorfData$StopCodons),
                              prediction = cageTissuesPrediction$Matrix == 1)
   x_size <- min(11, (14 / max(8, max(length(levels(startAndStop$StartCodons)), length(levels(startAndStop$StartCodons)))))*5)
+  theme <- ggplot2::theme_bw() + theme(axis.text.x = element_text(size = x_size),
+                              panel.grid.minor = element_blank())
+  candidates <- copy(startAndStop)
+  candidates$group <- "candidate"
+  translated <- startAndStop[prediction == TRUE,]
+  translated$group <- "translated"
+  startAndStops <- rbindlist(list(candidates, translated))
+  starts <- startAndStops[, (.N), by = .(StartCodons, group)]
+  starts[, percent := (V1 / sum(V1))*100, by = group]
 
-  startCandidates <- ggplot(data = startAndStop, aes(StartCodons)) +
-    geom_bar(width = 0.3) + theme_bw() + theme(axis.text.x = element_text(size = x_size))
-  startPredicted <- ggplot(data = startAndStop[prediction == TRUE,], aes(StartCodons)) +
-    geom_bar(width = 0.3) + theme_bw() + theme(axis.text.x = element_text(size = x_size))
-  stopCandidates <- ggplot(data = startAndStop, aes(StopCodons)) +
-    geom_bar(width = 0.3) + theme_bw() + theme(axis.text.x = element_text(size = x_size))
-  stopPredicted <- ggplot(data = startAndStop[prediction == TRUE,], aes(StopCodons)) +
-    geom_bar(width = 0.3) + theme_bw() + theme(axis.text.x = element_text(size = x_size))
-  grid <- gridExtra::grid.arrange(startCandidates, startPredicted, stopCandidates,
-                                  stopPredicted, ncol = 2, top = "Start and stop codon by total prediction")
+  startCandidates <- ggplot(data = starts, aes(x = StartCodons, y = percent, fill = group)) +
+    geom_bar(stat="identity", position = "dodge", width = 0.3,) +
+    theme + xlab("Start codon") +
+    ylab("Percent") + scale_fill_manual(values = c("gray", "#390e70"))
+
+  if (stop.codons) {
+    stops <- startAndStops[, (.N), by = .(StopCodons, group)]
+    stops[, percent := (V1 / sum(V1))*100, by = group]
+
+    stopCandidates <- ggplot(data = stops, aes(x = StopCodons, y = percent, fill = group)) +
+      geom_bar(stat="identity", position = "dodge", width = 0.3,) +
+      theme + xlab("Stop codon") +
+      ylab("Percent") + scale_fill_manual(values = c("gray", "#390e70"))
+    grid <- gridExtra::grid.arrange(startCandidates, stopCandidates,
+                                    ncol = 1, top = "Start and stop codon by total prediction")
+  } else {
+    grid <- gridExtra::grid.arrange(startCandidates, top = "Start codon by total prediction")
+  }
   return(grid)
 }
+
+#' Box plot of feature difference between active and inactive uORFs
+#'
+#' @param prediction data.table of prediction values in c(0, 1).
+#' @param tissue, character, default readTable("experiment_groups")[[1]][1].
+#' @importFrom data.table melt
+#' @importFrom ggplot2 ggplot
+#' @return ggplot object of boxplots
+feature.boxplots <- function(prediction = predictUorfs(mode = mode),
+                             tissue = readTable("experiment_groups")[[1]][1]) {
+  uorfTable <- makeORFPredictionData(tissue)
+  uts <- uorfTable; uts$startCodonPerGroupBest <- NULL; uts$RSS <- NULL; uts$startRegionCoverage <- NULL
+
+  uorfData <- getAllSequenceFeaturesTable()
+  uds <- data.table(uorfData, stringsAsFactors = TRUE)
+  # Add CDS
+  cdsData <- readRDS(file = paste0("features/TrainingData_",tissue,".rds"))[y == 1,]
+  cdsData <- cdsData[, which(colnames(cdsData) %in% colnames(uts)), with = FALSE]
+  uts <- rbindlist(list(uts, cdsData))
+
+  #if (!is.null(uds$lengths)) uts[,ORF_length := uds$lengths]
+  #if (!is.null(uds$distORFCDS)) uts[,distORFCDS := uds$distORFCDS]
+  if (!is.null(uts$disengagementScores)) colnames(uts)[which(colnames(uts) == "disengagementScores")] <- "disengagement"
+  if (!is.null(uts$startCodonCoverage)) colnames(uts)[which(colnames(uts) == "startCodonCoverage")] <- "startCoverage"
+  if (!is.null(uts$startRegionRelative)) colnames(uts)[which(colnames(uts) == "startRegionRelative")] <- "startRelative"
+  pred <- c(prediction$predict, rep(2, nrow(cdsData)))
+
+
+  uts.melt <- data.table::melt(uts)
+  uts.melt[, translated := factor(rep(pred, ncol(uts)), levels = c(1, 0, 2), labels = c("yes", "no", "CDS"),
+                                  ordered = TRUE)]
+  uts.melt[abs(value) < 0.01, value := 0]
+  uts.melt[value < -0.1, value := -log2(-value)]
+  uts.melt[value > 0.1, value := abs(log2(value))]
+
+
+  uts.melt.sample <- uts.melt[sample(nrow(uts.melt), size = min(1e6, nrow(uts.melt))),]
+  plot <- ggplot(uts.melt.sample, aes(x=variable, y=value)) +
+    geom_boxplot(aes(fill = translated), outlier.size = 0.7, outlier.alpha = 0.5) +
+    xlab("Feature")+ylab("Score (pseudo-log2)") +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+    coord_cartesian(ylim = c(-5, 12))
+  return(plot)
+}
+
+expression.check <- function(prediction = predictUorfs(mode = mode),
+                             tissue = readTable("experiment_groups")[[1]][1]) {
+  uorfTable <- makeORFPredictionData(tissue)[, fpkmRFP]
+  uorfTable <- data.table(txNames = readTable("uORFTxToGene")$txNames, uorfTable)
+  uorfTable <- uorfTable[prediction$predict == 1,]
+  # Add CDS
+  cdsData <- readTable("cdsfpkmRFP")[,unlist(readTable("experiment_groups_all")) %in% tissue, with = FALSE]
+  cdsData <- data.table(txNames = names(uORFomePipe:::getCDSFiltered()), cdsData)
+  dt <- data.table::merge.data.table(uorfTable, cdsData, by = "txNames", all.x = TRUE)
+  colnames(dt) <- c("txNames", "uORF", "CDS")
+
+
+  plot <- ggplot(dt, aes(x=log2(uORF), y=log2(CDS))) +
+    geom_point() +
+    xlab("Ribo-seq FPKM log2 (CDS)")+ylab("Ribo-seq FPKM log2 (uORF)") +
+    theme_bw()
+}
+
+#' venn diagram of uORFs
+#'
+#' Shows overlap between all stages / tissues
+#' @param predictions a data.table of predictions, default: readTable("tissueAtlasByCageAndPred")
+#' @param filename 'venn_diagramm_uORFs.png'
+#' @param width numeric, default: 5 (unit is inch)
+#' @param height numeric, default: 5 (unit is inch)
+#' @return invisible(NULL), object saved to disc
+#' @importFrom VennDiagram venn.diagram
+venn.diagram.uORFs <- function(predictions = readTable("tissueAtlasByCageAndPred"),
+                               filename = 'venn_diagramm_uORFs.png',
+                               width = 5, height = 5) {
+  preds <- copy(predictions)
+  preds$total <- NULL
+  preds <- preds[rowSums(preds) > 0, ]
+
+  my_list <- list()
+  for(i in seq_along(preds)) {
+    my_list[[length(my_list) + 1]] <- which(preds[, i, with = F] == 1)
+  }
+  # Chart
+  VennDiagram::venn.diagram(imagetype = "png",
+                             x = my_list,
+                             category.names = colnames(preds),
+                             filename = filename,
+                             output=TRUE, units = "in",
+                            width = width, height = height)
+  return(invisible(NULL))
+}
+
 
 #' Test artificial vs original cds
 #'

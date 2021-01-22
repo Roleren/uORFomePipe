@@ -259,25 +259,25 @@ if (!exp_exists) { # Create experiments only once!
   # First input gtf and genome
   gtf.file <- "/data/references/Zv10_zebrafish/Danio_rerio.GRCz10.81_chr.gtf.db" # GTF for organism
   genome.file <- "/data/references/Zv10_zebrafish/Danio_rerio.GRCz10.fa" # Fasta genome for organism
-
+  organism <- "Danio rerio"
   # CAGE (Cap Analysis Gene Expression) (dir is folder with CAGE libraries)
   create.experiment(dir = "/data/processed_data/CAGE/nepal_2013_zebrafish/final_results/aligned_GRCz10",
                     exper = exp.name.CAGE,
-                    txdb = gtf.file, fa = genome.file)
+                    txdb = gtf.file, fa = genome.file, organism = organism)
   df.cage <- read.experiment(exp.name.CAGE) # If this works, you made a valid experiment
   # Collapse CAGE reads at same position, make score column and subset to 5' ends
   convertLibs(df.cage, addScoreColumn = TRUE, addSizeColumn = FALSE, method = "5prime"); remove.experiments(df.cage)
   # RFP (Ribo-seq)
   create.experiment("/data/processed_data/Ribo-seq/chew_2013_zebrafish/final_results/aligned_GRCz10",
                     exper = exp.name.RFP, type = "bam",
-                    txdb = gtf.file, fa = genome.file)
+                    txdb = gtf.file, fa = genome.file, organism = organism)
   df.rfp <- read.experiment(exp.name.RFP)
   # p-site detection & pshifting: pick different read lengths if you want
   shiftFootprintsByExperiment(df.rfp, accepted.lengths = 25:30) 
   # RNA (mRNA-seq)
   create.experiment(
   "/data/processed_data/RNA-seq/chew_2013_and_pauli_2012_zebrafish/final_results/aligned_GRCz10/sorted",
-                    exper = exp.name.RNA, txdb = gtf.file, fa = genome.file)
+                    exper = exp.name.RNA, txdb = gtf.file, fa = genome.file, organism = organism)
   df.rna <- read.experiment(exp.name.RNA)
   convertLibs(df.rna, addScoreColumn = TRUE, type = "bedo"); remove.experiments(df.rna)
 }
@@ -301,9 +301,9 @@ if (!exp_exists) { # Create experiments only once!
   
   # Run 
   find_uORFome(mainPath = "~/results/uORFome_zebrafish",
-             organism = "Danio rerio",
-             df.rfp, df.rna, df.cage,
-             startCodons, stopCodons)
+               organism = organism.df(df.rfp),
+               df.rfp, df.rna, df.cage,
+               startCodons, stopCodons)
 }
 
 

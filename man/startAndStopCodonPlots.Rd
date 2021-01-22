@@ -4,7 +4,10 @@
 \alias{startAndStopCodonPlots}
 \title{Distribution of start and stop codon according to total prediction}
 \usage{
-startAndStopCodonPlots()
+startAndStopCodonPlots(stop.codons = FALSE)
+}
+\arguments{
+\item{stop.codons}{= FALSE, if TRUE add a row of stop codon plots}
 }
 \description{
 Distribution of start and stop codon according to total prediction

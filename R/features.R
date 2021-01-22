@@ -18,7 +18,15 @@ getSequenceFeatures <- function(organism, biomart,
   # gene transcript connections for naming
 
   # kozak
-  kozak <- kozakSequenceScore(grl, tx, fa)
+  if (organism %in% c(c("human", "Homo sapiens"),
+                      c("mouse", "Mus musculus"),
+                      c("zebrafish", "Danio rerio"))) {
+    kozak <- kozakSequenceScore(grl, tx, fa, species = organism)
+  } else {
+    message("Did not find kozak sequence for organism, checking vs human kozak")
+    kozak <- kozakSequenceScore(grl, tx, fa)
+  }
+
   # Start and stop
   starts <- startCodons(grl, is.sorted = T)
   StartCodons <- ORFik:::txSeqsFromFa(starts, fa, TRUE, FALSE)
