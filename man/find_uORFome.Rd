@@ -16,6 +16,7 @@ find_uORFome(
   max.artificial.length = 100,
   startCodons.cds.allowed = startCodons,
   stopCodons.cds.allowed = stopCodons,
+  biomart = "ensembl",
   BPPARAM = bpparam()
 )
 }
@@ -53,6 +54,10 @@ Which start codons can the CDS you train on have ?}
 
 \item{stopCodons.cds.allowed}{character, default same as stopCodons argument
 Which stop codons can the CDS you train on have ?}
+
+\item{biomart}{default "ensembl", get gene symbols and GO terms for uORF genes. Will
+be automaticly detected by organism name in ensembl database.
+Set to NULL if you don't want to check Gene symbols and GO terms.}
 
 \item{BPPARAM}{
     An instance of a \code{BiocParallelParam} class, e.g.,

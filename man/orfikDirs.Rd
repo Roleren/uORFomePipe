@@ -28,9 +28,9 @@ orfikDirs(
 \item{organism}{scientific name of organism,
 like Homo sapiens, Danio rerio, etc.}
 
-\item{biomart}{default "ensembl", will then be automaticly detected by
-organism name in ensembl database. Set to NULL if you don't want to check
-Gene symbols and GO terms.}
+\item{biomart}{default "ensembl", get gene symbols and GO terms for uORF genes. Will
+be automaticly detected by organism name in ensembl database.
+Set to NULL if you don't want to check Gene symbols and GO terms.}
 
 \item{mode}{character, default: "uORF". alternative "aCDS". Do you want to predict
 on uORFs or artificial CDS. if "aCDS" will run twice once for whole length CDS and one for

@@ -29,6 +29,7 @@
 #' Only one of p0 and p1 can be > 0.5, and that value will decide if
 #' prediction is 0 or 1.
 #' @importFrom BiocParallel register
+#' @importFrom BiocParallel bpparam
 #' @import ORFik
 #' @export
 #' @examples
@@ -44,13 +45,14 @@ find_uORFome <- function(mainPath, organism = organism.df(df.rfp), df.rfp, df.rn
                          max.artificial.length = 100,
                          startCodons.cds.allowed = startCodons,
                          stopCodons.cds.allowed = stopCodons,
+                         biomart = "ensembl",
                          BPPARAM = bpparam()) {
   #¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
   # Create folders, variables and validate input
   #¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
   orfikDirs(mainPath = mainPath,
             df.rfp, df.rna, df.cage,
-            organism = organism,
+            organism = organism, biomart = biomart,
             mode = mode,
             startCodons.cds.allowed = startCodons.cds.allowed,
             stopCodons.cds.allowed = stopCodons.cds.allowed)
@@ -119,11 +121,12 @@ find_uORFome <- function(mainPath, organism = organism.df(df.rfp), df.rfp, df.rn
 
 #' Reassign leaders by CAGE
 #'
-#' Step 1 of uORFome pipeline
+#' Step 1 of uORFome pipeline: Save leaders and uORF search region
+#' (leader + cds)
 #' @param cageFiles a ORFik experiment with CAGE files and annotation
 #' @inheritParams ORFik::reassignTSSbyCage
 #' @inheritParams find_uORFome
-#' @return uORFs search region (CAGE leaders + CDS)
+#' @return invisible(NULL), files saved to disc
 #' @export
 getLeadersFromCage <- function(cageFiles, filterValue = 3,
                                BPPARAM = bpparam()) {
@@ -132,11 +135,13 @@ getLeadersFromCage <- function(cageFiles, filterValue = 3,
   if (is.null(cageFiles)) {
     message("Running pipeline without CAGE data, set to NULL")
     groups <- readTable("experiment_groups")[[1]]
+    getCDS()
     uORFSearchRegion <- ORFik:::addCdsOnLeaderEnds(fiveUTRs, cds)
     for(g in groups) {
       saveRDS(fiveUTRs, file = paste0(leadersFolder, "_", g, ".leader.rds"))
       saveRDS(uORFSearchRegion, file = paste0(regionUORFsFolder, "_", g, ".regionUORF.rds"))
     }
+    return(invisible(NULL))
   }
 
   if (is(cageFiles, "experiment")) cageFiles <- filepath(cageFiles, "bedo")

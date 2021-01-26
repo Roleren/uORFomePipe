@@ -14,9 +14,9 @@
 #' @param df.cage ORFik experiment of CAGE, set to NULL if you don't have CAGE.
 #' @param organism scientific name of organism,
 #' like Homo sapiens, Danio rerio, etc.
-#' @param biomart default "ensembl", will then be automaticly detected by
-#' organism name in ensembl database. Set to NULL if you don't want to check
-#' Gene symbols and GO terms.
+#' @param biomart default "ensembl", get gene symbols and GO terms for uORF genes. Will
+#' be automaticly detected by organism name in ensembl database.
+#' Set to NULL if you don't want to check Gene symbols and GO terms.
 #' @param mode character, default: "uORF". alternative "aCDS". Do you want to predict
 #' on uORFs or artificial CDS. if "aCDS" will run twice once for whole length CDS and one for
 #' truncated CDS to validate model works for short ORFs. "CDS" is option to predict on
@@ -40,7 +40,10 @@ orfikDirs <- function(mainPath, df.rfp, df.rna, df.cage,
   message("Welcome, setting up uORFome folders\n")
   message("--------------------------------------")
   message(p("Registered organism is: ", organism))
-  biomart_dataset <- getBiomartFromOrganism(organism, biomart = biomart)
+  if (!is.null(biomart)) {
+    biomart_dataset <- getBiomartFromOrganism(organism, biomart = biomart)
+  } else biomart_dataset <- NULL
+
   message(paste("Project location: ", mainPath))
   message(paste("Run mode:", mode))
 

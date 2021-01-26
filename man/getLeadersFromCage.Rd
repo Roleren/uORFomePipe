@@ -20,8 +20,9 @@ CageSeq data) If you already filtered, set it to 0.}
   }
 }
 \value{
-uORFs search region (CAGE leaders + CDS)
+invisible(NULL), files saved to disc
 }
 \description{
-Step 1 of uORFome pipeline
+Step 1 of uORFome pipeline: Save leaders and uORF search region
+(leader + cds)
 }
