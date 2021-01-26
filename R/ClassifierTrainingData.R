@@ -1,7 +1,7 @@
 #' Get CDS and 3'UTR TrainingData of ribo seq features
 #'
 #' Positive set is cds, negative is downstream region of 3' UTRs
-#' @param tissue Tissue to train on, use "combined" if you want all in one,
+#' @param tissues Tissue to train on, use "combined" if you want all in one,
 #' first run of training it is a ORFik experiment.
 #' @param features features to train model on, must exist in database, default:
 #' c("countRFP", "disengagementScores", "entropyRFP", "floss",

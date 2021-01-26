@@ -16,16 +16,20 @@
 #' started running, as this might make the program crash
 #' @inheritParams orfikDirs
 #' @inheritParams getCandidateuORFs
+#' @inheritParams BiocParallel::register
 #' @param max.artificial.length integer, default: 100, only applies if mode = "aCDS",
 #' so ignore this for most people,
 #' when creating artificial ORFs from CDS, how large should maximum ORFs be,
 #' this number is 1/6 of maximum size of ORFs (max size 600 if artificialLength is 100)
 #' Will sample random size from 6 to that number, if max.artificial.length is
 #' 2, you can get artificial ORFs of size (6, 9 or 12) (6, + 6 + (3x1), 6 + (3x2))
+#'
 #' @return the prediction as data.table with 3 columns. Prediction (0 or 1),
 #' p0 (probability of a negtive prediction), p1 (probability of positive prediction).
 #' Only one of p0 and p1 can be > 0.5, and that value will decide if
 #' prediction is 0 or 1.
+#' @importFrom BiocParallel register
+#' @import ORFik
 #' @export
 #' @examples
 #' mainPath <- "~/bio/results/uORFome_Zebrafish"
@@ -39,7 +43,8 @@ find_uORFome <- function(mainPath, organism = organism.df(df.rfp), df.rfp, df.rn
                          stopCodons = "TAA|TAG|TGA", mode = "uORF",
                          max.artificial.length = 100,
                          startCodons.cds.allowed = startCodons,
-                         stopCodons.cds.allowed = stopCodons) {
+                         stopCodons.cds.allowed = stopCodons,
+                         BPPARAM = bpparam()) {
   #¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
   # Create folders, variables and validate input
   #¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
@@ -53,18 +58,19 @@ find_uORFome <- function(mainPath, organism = organism.df(df.rfp), df.rfp, df.rn
     #¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
     # 2. Find uORF search region per CAGE
     #¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
-    getLeadersFromCage(df.cage)
+    getLeadersFromCage(df.cage, BPPARAM = BPPARAM)
 
     #¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
     # 3. Find candidate uORFs per CAGE
     #¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
     getCandidateuORFs(startCodons = startCodons,
-                      stopCodons = stopCodons)
+                      stopCodons = stopCodons,
+                      BPPARAM = BPPARAM)
 
     #¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
     # 4. make uorf IDs (to get unique identifier per uORF)
     #¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
-    getIDsFromUorfs()
+    getIDsFromUorfs(BPPARAM = BPPARAM)
 
     #¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
     # 5. CAGE atlas per tissue and uORF / cage leader objects
@@ -116,6 +122,7 @@ find_uORFome <- function(mainPath, organism = organism.df(df.rfp), df.rfp, df.rn
 #' Step 1 of uORFome pipeline
 #' @param cageFiles a ORFik experiment with CAGE files and annotation
 #' @inheritParams ORFik::reassignTSSbyCage
+#' @inheritParams find_uORFome
 #' @return uORFs search region (CAGE leaders + CDS)
 #' @export
 getLeadersFromCage <- function(cageFiles, filterValue = 3,
@@ -156,7 +163,11 @@ getLeadersFromCage <- function(cageFiles, filterValue = 3,
 #' Find uORFs from new leader regions
 #'
 #' Step 2 of uORFome pipeline
-#' @param startCodons default "ATG|CTG|TTG|GTG|AAG|AGG|ACG|ATC|ATA|ATT"
+#' @param folder folder to save, default .GlobalEnv arugment: regionUORFsFolder
+#' @param startCodons default "ATG|CTG|TTG|GTG|AAG|AGG|ACG|ATC|ATA|ATT", set to
+#' "ATG|CTG|TTG|GTG" for a more certain set.
+#' @param stopCodons default "TAA|TAG|TGA"
+#' @inheritParams find_uORFome
 #' @export
 getCandidateuORFs <- function(folder = regionUORFsFolder,
                               startCodons = "ATG|CTG|TTG|GTG|AAG|AGG|ACG|ATC|ATA|ATT",
@@ -194,6 +205,8 @@ getCandidateuORFs <- function(folder = regionUORFsFolder,
 #' Find unique uORF ID's from uORFs
 #'
 #' Step 3 of uORFome pipeline
+#' @param folder folder to save, default .GlobalEnv arugment: uorfFolder
+#' @inheritParams find_uORFome
 #' @export
 getIDsFromUorfs <- function(folder = uorfFolder, BPPARAM = bpparam()){
   uorfFiles = list.files(folder, full.names = TRUE)
@@ -211,6 +224,7 @@ getIDsFromUorfs <- function(folder = uorfFolder, BPPARAM = bpparam()){
 #' Step 4 of uORFome pipeline
 #' The rows of tables will always be uORFs in order as the candidate uORF file
 #' For transcripts it will be the transcript order in cageTx
+#' @inheritParams find_uORFome
 #' @export
 createCatalogueDB <- function(df.cage,
                               dataBaseFolder = get("dataBaseFolder", envir = .GlobalEnv),

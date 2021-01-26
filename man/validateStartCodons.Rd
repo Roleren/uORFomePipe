@@ -7,6 +7,11 @@ A good check for minus strand errors.}
 \usage{
 validateStartCodons(uniqueIDs, startCodons)
 }
+\arguments{
+\item{uniqueIDs}{unique ORF ids from ORFik}
+
+\item{startCodons}{character, sequence of start codons}
+}
 \description{
 check that all orfs acctually have a valid start codon
 A good check for minus strand errors.

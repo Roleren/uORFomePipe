@@ -2,10 +2,13 @@
 % Please edit documentation in R/DataBaseGetters.R
 \name{removeIDColumns}
 \alias{removeIDColumns}
-\title{fix this to work on string tables}
+\title{Remove non numberic columns on left side}
 \usage{
 removeIDColumns(dt)
 }
+\arguments{
+\item{dt}{data.table to remove from}
+}
 \description{
-fix this to work on string tables
+Remove non numberic columns on left side
 }

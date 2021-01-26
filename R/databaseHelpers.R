@@ -2,6 +2,8 @@
 #'
 #' Will assing to .GlobalEnv
 #' @param name full path name of database, existing or fresh.
+#' @importFrom DBI dbConnect
+#' @importFrom RSQLite SQLite
 #' @return invisible(NULL)
 createDataBase <- function(name){
   uorfDB <- dbConnect(RSQLite::SQLite(), name)

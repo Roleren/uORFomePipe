@@ -1,5 +1,5 @@
 #' Create GRangesList of ORF IDs
-#' @param uniqueIDS a character vector of ORF ids, or single column data.table
+#' @param uniqueIDs a character vector of ORF ids, or single column data.table
 #' @return GRangesList
 #' @importFrom data.table fread
 #' @importFrom data.table tstrsplit

@@ -12,9 +12,6 @@
 #' @param df.rfp ORFik experiment of Ribo-seq
 #' @param df.rna ORFik experiment of RNA-seq
 #' @param df.cage ORFik experiment of CAGE, set to NULL if you don't have CAGE.
-#' @param dataFolder ORFik experiment that contains Annotation
-#' @param makeDatabase default FALSE, set to TRUE if you want
-#' to predict translated uORFs
 #' @param organism scientific name of organism,
 #' like Homo sapiens, Danio rerio, etc.
 #' @param biomart default "ensembl", will then be automaticly detected by

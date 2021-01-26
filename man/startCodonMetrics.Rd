@@ -14,6 +14,9 @@ startCodonMetrics(
 \item{hits}{a logical vector of TRUE, FALSE (TRUE is predicted)}
 
 \item{tissue}{default NULL, or a character name of tissue to print}
+
+\item{StartCodons}{character, sequences of start codons, default:
+getAllSequenceFeaturesTable()$StartCodons}
 }
 \description{
 Usually something like this

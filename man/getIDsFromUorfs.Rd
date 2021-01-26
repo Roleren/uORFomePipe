@@ -6,6 +6,15 @@
 \usage{
 getIDsFromUorfs(folder = uorfFolder, BPPARAM = bpparam())
 }
+\arguments{
+\item{folder}{folder to save, default .GlobalEnv arugment: uorfFolder}
+
+\item{BPPARAM}{
+    An instance of a \code{BiocParallelParam} class, e.g.,
+    \code{\link[BiocParallel]{MulticoreParam}}, \code{\link[BiocParallel]{SnowParam}},
+    \code{\link[BiocParallel]{DoparParam}}.
+  }
+}
 \description{
 Step 3 of uORFome pipeline
 }

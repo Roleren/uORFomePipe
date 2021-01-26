@@ -6,6 +6,9 @@
 \usage{
 leaderCage(with.cds = TRUE)
 }
+\arguments{
+\item{with.cds}{logical, default TRUE (add cds upstream)}
+}
 \description{
 Ensures to span all candidate uORFs found
 }

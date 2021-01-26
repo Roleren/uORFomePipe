@@ -15,6 +15,9 @@ makeTrainingData(
 )
 }
 \arguments{
+\item{tissues}{Tissue to train on, use "combined" if you want all in one,
+first run of training it is a ORFik experiment.}
+
 \item{features}{features to train model on, must exist in database, default:
 c("countRFP", "disengagementScores", "entropyRFP", "floss",
 "fpkmRFP","ioScore", "ORFScores", "RRS", "RSS", "startCodonCoverage",
@@ -31,9 +34,6 @@ when creating artificial ORFs from CDS, how large should maximum ORFs be,
 this number is 1/6 of maximum size of ORFs (max size 600 if artificialLength is 100)
 Will sample random size from 6 to that number, if max.artificial.length is
 2, you can get artificial ORFs of size (6, 9 or 12) (6, + 6 + (3x1), 6 + (3x2))}
-
-\item{tissue}{Tissue to train on, use "combined" if you want all in one,
-first run of training it is a ORFik experiment.}
 }
 \value{
 invisible(NULL), saved to disc

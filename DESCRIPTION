@@ -23,12 +23,13 @@ Depends:
 Imports:
   tools,
   h2o,
-  data.table,
   ggplot2,
+  BiocParallel, 
   biomaRt,
   biomartr,
+  cowplot,
+  ggpubr,
   gridExtra,
-  VennDiagram, 
-  BiocParallel, 
+  RSQLite,
   VennDiagram
 RoxygenNote: 7.1.0

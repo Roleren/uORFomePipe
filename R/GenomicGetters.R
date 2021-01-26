@@ -112,6 +112,7 @@ getLeaders <- function(assignIt = TRUE,
 #' Get maximum spanning CAGE leaders
 #'
 #' Ensures to span all candidate uORFs found
+#' @param with.cds logical, default TRUE (add cds upstream)
 leaderCage <- function(with.cds = TRUE){
   if(with.cds)
     return(readRDS(p(dataFolder,"/CageFiveUTRsWithCDS.rds")))

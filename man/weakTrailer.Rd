@@ -9,6 +9,8 @@ weakTrailer(coverage, fpkm, startRegionRelative, ORFScore)
 \arguments{
 \item{coverage}{(counts over region)}
 
+\item{fpkm}{fragments per kilobase transcript per million}
+
 \item{startRegionRelative}{Relative coverage of start region to upstream short region}
 
 \item{ORFScore}{Periodicity score of triplets, > 0 if frame 0 has most reads.}

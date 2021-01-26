@@ -12,6 +12,12 @@ getLeadersFromCage(cageFiles, filterValue = 3, BPPARAM = bpparam())
 \item{filterValue}{The minimum number of reads on cage position, for it to
 be counted as possible new tss. (represented in score column in
 CageSeq data) If you already filtered, set it to 0.}
+
+\item{BPPARAM}{
+    An instance of a \code{BiocParallelParam} class, e.g.,
+    \code{\link[BiocParallel]{MulticoreParam}}, \code{\link[BiocParallel]{SnowParam}},
+    \code{\link[BiocParallel]{DoparParam}}.
+  }
 }
 \value{
 uORFs search region (CAGE leaders + CDS)

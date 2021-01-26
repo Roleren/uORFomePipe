@@ -15,7 +15,8 @@ find_uORFome(
   mode = "uORF",
   max.artificial.length = 100,
   startCodons.cds.allowed = startCodons,
-  stopCodons.cds.allowed = stopCodons
+  stopCodons.cds.allowed = stopCodons,
+  BPPARAM = bpparam()
 )
 }
 \arguments{
@@ -30,7 +31,10 @@ like Homo sapiens, Danio rerio, etc.}
 
 \item{df.cage}{ORFik experiment of CAGE, set to NULL if you don't have CAGE.}
 
-\item{startCodons}{default "ATG|CTG|TTG|GTG|AAG|AGG|ACG|ATC|ATA|ATT"}
+\item{startCodons}{default "ATG|CTG|TTG|GTG|AAG|AGG|ACG|ATC|ATA|ATT", set to
+"ATG|CTG|TTG|GTG" for a more certain set.}
+
+\item{stopCodons}{default "TAA|TAG|TGA"}
 
 \item{mode}{character, default: "uORF". alternative "aCDS". Do you want to predict
 on uORFs or artificial CDS. if "aCDS" will run twice once for whole length CDS and one for
@@ -49,6 +53,12 @@ Which start codons can the CDS you train on have ?}
 
 \item{stopCodons.cds.allowed}{character, default same as stopCodons argument
 Which stop codons can the CDS you train on have ?}
+
+\item{BPPARAM}{
+    An instance of a \code{BiocParallelParam} class, e.g.,
+    \code{\link[BiocParallel]{MulticoreParam}}, \code{\link[BiocParallel]{SnowParam}},
+    \code{\link[BiocParallel]{DoparParam}}.
+  }
 }
 \value{
 the prediction as data.table with 3 columns. Prediction (0 or 1),

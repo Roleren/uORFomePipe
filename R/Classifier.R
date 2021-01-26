@@ -10,6 +10,7 @@
 #' @param port h2o cluster port, default: 54321
 #' @param nthreads_h2o number of cores for H20: default max(45, detectCores()/2)
 #' @param max_mem_size max allowed memory for H20: default ("200G")
+#' @param mode character, default "uORF"
 #' @export
 #' @import h2o
 predictUorfs <- function(tissues = readTable("experiment_groups")[[1]],

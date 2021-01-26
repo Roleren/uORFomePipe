@@ -125,6 +125,7 @@ perSampleCountPlot <- function(mode = "uORF") {
 #' @param stop.codons = FALSE, if TRUE add a row of stop codon plots
 #' @importFrom ggplot2 theme_bw
 #' @import gridExtra
+#' @return grid object of plot
 startAndStopCodonPlots <- function(stop.codons = FALSE) {
   cageTissuesPrediction <- readTable("finalCAGEuORFPrediction")
   uorfData <- getAllSequenceFeaturesTable()
@@ -265,6 +266,7 @@ venn.diagram.uORFs <- function(predictions = readTable("tissueAtlasByCageAndPred
 #' @param original path to uORFomePipe run of original
 #' @param output path to save plot
 #' @return data.table of hits per length of artificial
+#' @importFrom ggpubr ggscatter
 #' @export
 test.artificial <- function(artificial,
                             output,
@@ -374,6 +376,8 @@ validateExperiments <- function(grl){
 
 #' check that all orfs acctually have a valid start codon
 #' A good check for minus strand errors.
+#' @param uniqueIDs unique ORF ids from ORFik
+#' @param startCodons character, sequence of start codons
 validateStartCodons <- function(uniqueIDs, startCodons){
   gr <- toGRFromUniqueID(uniqueIDs)
   names(gr) <- seq(length(gr))

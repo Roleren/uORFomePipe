@@ -12,7 +12,12 @@ getCandidateuORFs(
 )
 }
 \arguments{
-\item{startCodons}{default "ATG|CTG|TTG|GTG|AAG|AGG|ACG|ATC|ATA|ATT"}
+\item{folder}{folder to save, default .GlobalEnv arugment: regionUORFsFolder}
+
+\item{startCodons}{default "ATG|CTG|TTG|GTG|AAG|AGG|ACG|ATC|ATA|ATT", set to
+"ATG|CTG|TTG|GTG" for a more certain set.}
+
+\item{stopCodons}{default "TAA|TAG|TGA"}
 }
 \description{
 Step 2 of uORFome pipeline

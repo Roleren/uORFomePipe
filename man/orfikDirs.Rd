@@ -42,11 +42,6 @@ Which start codons can the CDS you train on have ?}
 
 \item{stopCodons.cds.allowed}{character, default same as stopCodons argument
 Which stop codons can the CDS you train on have ?}
-
-\item{dataFolder}{ORFik experiment that contains Annotation}
-
-\item{makeDatabase}{default FALSE, set to TRUE if you want
-to predict translated uORFs}
 }
 \description{
 Make directory structure for orf finding, create database

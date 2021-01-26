@@ -7,7 +7,7 @@
 toGRFromUniqueID(uniqueIDs)
 }
 \arguments{
-\item{uniqueIDS}{a character vector of ORF ids, or single column data.table}
+\item{uniqueIDs}{a character vector of ORF ids, or single column data.table}
 }
 \value{
 GRangesList

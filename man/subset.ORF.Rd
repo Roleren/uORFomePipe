@@ -14,6 +14,12 @@
 )
 }
 \arguments{
+\item{orfs}{GRangesList of ORFs}
+
+\item{minimum.length}{numeric, default 6}
+
+\item{must.be.mod.3.0}{logical, default TRUE}
+
 \item{startCodons}{character vector, default: c("ATG", "CTG", "TTG", "AAG", "AGG")}
 
 \item{stopCodons}{character vector, default: c("TAA", "TGA", "TAG")}

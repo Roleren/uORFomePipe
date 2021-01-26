@@ -14,7 +14,7 @@ warning, this will duplicate some uorfs.}
 
 \item{uniqueORFs}{logical, default TRUE, only unique}
 
-\item{tissue}{character, only applicable when mode is "aCDS"}
+\item{mode}{character, default "uORF". Also "CDS" for validation runs.}
 }
 \value{
 a GRangesList or data.table, if(F, F)

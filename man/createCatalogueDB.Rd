@@ -12,6 +12,9 @@ createCatalogueDB(
   leadersFolder = get("leadersFolder", envir = .GlobalEnv)
 )
 }
+\arguments{
+\item{df.cage}{ORFik experiment of CAGE, set to NULL if you don't have CAGE.}
+}
 \description{
 Step 4 of uORFome pipeline
 The rows of tables will always be uORFs in order as the candidate uORF file

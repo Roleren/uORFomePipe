@@ -85,6 +85,7 @@ strongCDS <- function(coverage, fpkm, startCodonCoverage, startRegionRelative, O
 #' used as part of negative training set
 #' @param coverage (counts over region)
 #' @param startRegionRelative Relative coverage of start region to upstream short region
+#' @param fpkm fragments per kilobase transcript per million
 #' @param ORFScore Periodicity score of triplets, > 0 if frame 0 has most reads.
 #' @return logical TRUE/FALSE per row
 weakTrailer <- function(coverage, fpkm, startRegionRelative,

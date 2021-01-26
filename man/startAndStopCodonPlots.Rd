@@ -9,6 +9,9 @@ startAndStopCodonPlots(stop.codons = FALSE)
 \arguments{
 \item{stop.codons}{= FALSE, if TRUE add a row of stop codon plots}
 }
+\value{
+grid object of plot
+}
 \description{
 Distribution of start and stop codon according to total prediction
 }

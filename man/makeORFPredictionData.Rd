@@ -13,6 +13,9 @@ makeORFPredictionData(
 )
 }
 \arguments{
+\item{tissues}{Tissue to train on, use "combined" if you want all in one,
+first run of training it is a ORFik experiment.}
+
 \item{mode}{character, default: "uORF". alternative "aCDS". Do you want to predict
 on uORFs or artificial CDS. if "aCDS" will run twice once for whole length CDS and one for
 truncated CDS to validate model works for short ORFs. "CDS" is option to predict on

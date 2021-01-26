@@ -5,6 +5,8 @@
 #' bad: AAG AND AGG
 #' @param hits a logical vector of TRUE, FALSE (TRUE is predicted)
 #' @param tissue default NULL, or a character name of tissue to print
+#' @param StartCodons character, sequences of start codons, default:
+#' getAllSequenceFeaturesTable()$StartCodons
 #' @export
 startCodonMetrics <- function(hits, tissue = NULL,
                               StartCodons = getAllSequenceFeaturesTable()$StartCodons) {

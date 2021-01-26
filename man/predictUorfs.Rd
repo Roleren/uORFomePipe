@@ -24,6 +24,8 @@ use "combined" if you want mean of all groups}
 \item{nthreads_h2o}{number of cores for H20: default max(45, detectCores()/2)}
 
 \item{max_mem_size}{max allowed memory for H20: default ("200G")}
+
+\item{mode}{character, default "uORF"}
 }
 \description{
 Training data

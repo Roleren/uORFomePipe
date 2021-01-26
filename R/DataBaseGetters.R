@@ -58,7 +58,8 @@ getIDColumns <- function(dt, allowNull = F){
   }
   return(dt[, nIDs, with = FALSE])
 }
-#' fix this to work on string tables
+#' Remove non numberic columns on left side
+#' @param dt data.table to remove from
 removeIDColumns <- function(dt){
   if (!is.numeric(dt[1,1][[1]])) {
     dt <- dt[, -1]
@@ -74,7 +75,7 @@ removeIDColumns <- function(dt){
 #' @param withTranscripts logical, default TRUE, should the uorfs have transcript information,
 #' warning, this will duplicate some uorfs.
 #' @param uniqueORFs logical, default TRUE, only unique
-#' @param tissue character, only applicable when mode is "aCDS"
+#' @param mode character, default "uORF". Also "CDS" for validation runs.
 #' @return a GRangesList or data.table, if(F, F)
 #' @export
 getUorfsInDb <- function(withExons = T, withTranscripts = T, uniqueORFs = T,

@@ -1,5 +1,5 @@
 #' shortcut for paste0()
-#'
+#' @inheritDotParams base::paste
 p <- paste0
 
 #' Remove infinite and NAs in matrix
@@ -50,6 +50,9 @@ artificial.from.cds <- function(cds, size = 100,
 }
 #' Subset orfs by filters given
 #' @inheritParams artificial.from.cds
+#' @param orfs GRangesList of ORFs
+#' @param minimum.length numeric, default 6
+#' @param must.be.mod.3.0 logical, default TRUE
 #' @return GRangesList of subset that is valid by filter
 subset.ORF <- function(orfs, minimum.length = 6,
                        must.be.mod.3.0 = TRUE,

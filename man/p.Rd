@@ -6,6 +6,16 @@
 \usage{
 p(..., collapse = NULL)
 }
+\arguments{
+\item{...}{
+  Arguments passed on to \code{\link[base:paste]{base::paste}}
+  \describe{
+    \item{\code{sep}}{a character string to separate the terms.  Not
+    \code{\link[base]{NA_character_}}.}
+    \item{\code{collapse}}{an optional character string to separate the results.  Not
+    \code{\link[base]{NA_character_}}.}
+  }}
+}
 \description{
 shortcut for paste0()
 }
