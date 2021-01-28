@@ -248,10 +248,12 @@ createCatalogueDB <- function(df.cage,
 #'
 #' Step 5 of uORFome pipeline
 #' @inheritParams find_uORFome
+#' @param biomart character or NULL, default: get("biomart_dataset", envir = .GlobalEnv)
+#' @return invisible(NULL)
 #' @export
 makeTrainingAndPredictionData <- function(df.rfp, df.rna,
                                           organism = get("organism", mode = "character", envir = .GlobalEnv),
-                                          biomart = get("biomart_dataset", mode = "character", envir = .GlobalEnv),
+                                          biomart = get("biomart_dataset", envir = .GlobalEnv),
                                           mode = "uORF",
                                           max.artificial.length, BPPARAM = bpparam()) {
   message("--------------------------------------")

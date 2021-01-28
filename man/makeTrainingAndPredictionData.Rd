@@ -8,7 +8,7 @@ makeTrainingAndPredictionData(
   df.rfp,
   df.rna,
   organism = get("organism", mode = "character", envir = .GlobalEnv),
-  biomart = get("biomart_dataset", mode = "character", envir = .GlobalEnv),
+  biomart = get("biomart_dataset", envir = .GlobalEnv),
   mode = "uORF",
   max.artificial.length,
   BPPARAM = bpparam()
@@ -22,9 +22,7 @@ makeTrainingAndPredictionData(
 \item{organism}{scientific name of organism,
 like Homo sapiens, Danio rerio, etc.}
 
-\item{biomart}{default "ensembl", get gene symbols and GO terms for uORF genes. Will
-be automaticly detected by organism name in ensembl database.
-Set to NULL if you don't want to check Gene symbols and GO terms.}
+\item{biomart}{character or NULL, default: get("biomart_dataset", envir = .GlobalEnv)}
 
 \item{mode}{character, default: "uORF". alternative "aCDS". Do you want to predict
 on uORFs or artificial CDS. if "aCDS" will run twice once for whole length CDS and one for
@@ -43,6 +41,9 @@ Will sample random size from 6 to that number, if max.artificial.length is
     \code{\link[BiocParallel]{MulticoreParam}}, \code{\link[BiocParallel]{SnowParam}},
     \code{\link[BiocParallel]{DoparParam}}.
   }
+}
+\value{
+invisible(NULL)
 }
 \description{
 Step 5 of uORFome pipeline
