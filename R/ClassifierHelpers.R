@@ -1,7 +1,8 @@
 #' Train h2o rf model.
 #' negDT if you want own samples for that
 #' @param dt data.table of features to train on
-#' @param cv number of cross validations, default 10
+#' @param cv numeric, default 10, number of cross validations
+#' @param ntrees numeric, default 64, number of trees for random forest
 #' @inheritParams predictUorfs
 #' @import h2o
 forest <- function(dt, cv = 10, ntrees = 64, ip,

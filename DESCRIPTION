@@ -1,7 +1,7 @@
 Package: uORFomePipe
 Type: Package
 Title: uORF prediction in R
-Version: 0.1.0
+Version: 0.2.0
 Author: Hakon Tjeldnes
 Authors@R: c(
   person(given = "Haakon", family = "Tjeldnes", email = "hauken_heyken@hotmail.com", role = c("aut", "cre", "dtc")),

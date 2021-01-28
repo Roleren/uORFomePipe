@@ -10,7 +10,9 @@ forest(dt, cv = 10, ntrees = 64, ip, port, nthreads_h2o, max_mem_size)
 \arguments{
 \item{dt}{data.table of features to train on}
 
-\item{cv}{number of cross validations, default 10}
+\item{cv}{numeric, default 10, number of cross validations}
+
+\item{ntrees}{numeric, default 64, number of trees for random forest}
 
 \item{ip}{h2o cluster ip, default: "localhost".}
 

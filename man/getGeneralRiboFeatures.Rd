@@ -9,11 +9,12 @@ getGeneralRiboFeatures(
   df.rna = NULL,
   grl,
   preName = "",
-  threeUTRsSpecial = NULL
+  threeUTRsSpecial = NULL,
+  BPPARAM = bpparam()
 )
 }
 \arguments{
-\item{df.rfp}{ORFik experiment}
+\item{df.rfp}{ORFik experiment of Ribo-seq}
 
 \item{df.rna}{NULL}
 
@@ -22,6 +23,12 @@ getGeneralRiboFeatures(
 \item{preName}{name to pre append in database for each feature}
 
 \item{threeUTRsSpecial}{default NULL, or a GRangesList of 3' UTRs}
+
+\item{BPPARAM}{
+    An instance of a \code{BiocParallelParam} class, e.g.,
+    \code{\link[BiocParallel]{MulticoreParam}}, \code{\link[BiocParallel]{SnowParam}},
+    \code{\link[BiocParallel]{DoparParam}}.
+  }
 }
 \value{
 NULL (features saved to database)

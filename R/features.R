@@ -96,15 +96,16 @@ getSequenceFeatures <- function(organism, biomart,
 #' Get Ribo-seq features
 #'
 #' Excluding features that uses RNA-seq normalizations if df.rna is NULL
-#' @param df.rfp ORFik experiment
 #' @param df.rna NULL
 #' @param grl the ORFs as GRangesList
 #' @param preName name to pre append in database for each feature
 #' @param threeUTRsSpecial default NULL, or a GRangesList of 3' UTRs
+#' @inheritParams find_uORFome
 #' @return NULL (features saved to database)
 getGeneralRiboFeatures <- function(df.rfp, df.rna = NULL,
                                    grl, preName = "",
-                                   threeUTRsSpecial = NULL) {
+                                   threeUTRsSpecial = NULL,
+                                   BPPARAM = bpparam()) {
   pr <- ifelse(preName == "", "uORFs", preName)
   if (tableNotExists(p(preName, "ioScore"))) {
     message("--------------------------------------")
@@ -115,7 +116,9 @@ getGeneralRiboFeatures <- function(df.rfp, df.rna = NULL,
 
     paths <- filepath(df.rfp, "pshifted")
     paths.rna <- NULL
-    if (!is.null(df.rna)) paths.rna <- filepath(df.rna, "bedo")
+    if (!is.null(df.rna)) paths.rna <- filepath(df.rna, "ofst")
+    if (!is.null(df.rna) & length(grep("\\.ofst$", paths.rna)) == 0) paths.rna <- filepath(df.rna, "bedo")
+
 
     libs <-bplapply(seq(length(paths)),
       function(x, grl, fiveUTRs, threeUTRs, cds, startRegion, paths, paths.rna) {
@@ -126,14 +129,18 @@ getGeneralRiboFeatures <- function(df.rfp, df.rna = NULL,
         RNA <- if (!is.null(Y)) {
           fimport(Y, style)
         } else NULL
+        weight.RNA = 1L
+        if (!is.null(RNA$score)) weight.RNA <- "score"
+
         ORFik:::allFeaturesHelper(grl, RFP = fimport(X, style), RNA = RNA, tx, fiveUTRs, cds ,
                                   threeUTRs,
                                   faFile = NULL, riboStart = 26, riboStop = 34,
                                   sequenceFeatures = FALSE, grl.is.sorted = TRUE,
-                                  weight.RFP = "score", weight.RNA = 1L,
+                                  weight.RFP = "score", weight.RNA = weight.RNA,
                                   st = startRegion)
       }, grl = grl, fiveUTRs = fiveUTRs, threeUTRs = threeUTRs,
-      cds = cds, startRegion = startRegion, paths = paths, paths.rna = paths.rna)
+      cds = cds, startRegion = startRegion, paths = paths, paths.rna = paths.rna,
+      BPPARAM = BPPARAM)
 
     allRiboFeatures <- setDT(unlist(libs, recursive = FALSE))
     for(f in unique(colnames(allRiboFeatures))) { # Create one table per feature in DB

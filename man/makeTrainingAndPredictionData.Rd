@@ -10,7 +10,8 @@ makeTrainingAndPredictionData(
   organism = get("organism", mode = "character", envir = .GlobalEnv),
   biomart = get("biomart_dataset", mode = "character", envir = .GlobalEnv),
   mode = "uORF",
-  max.artificial.length
+  max.artificial.length,
+  BPPARAM = bpparam()
 )
 }
 \arguments{
@@ -36,6 +37,12 @@ when creating artificial ORFs from CDS, how large should maximum ORFs be,
 this number is 1/6 of maximum size of ORFs (max size 600 if artificialLength is 100)
 Will sample random size from 6 to that number, if max.artificial.length is
 2, you can get artificial ORFs of size (6, 9 or 12) (6, + 6 + (3x1), 6 + (3x2))}
+
+\item{BPPARAM}{
+    An instance of a \code{BiocParallelParam} class, e.g.,
+    \code{\link[BiocParallel]{MulticoreParam}}, \code{\link[BiocParallel]{SnowParam}},
+    \code{\link[BiocParallel]{DoparParam}}.
+  }
 }
 \description{
 Step 5 of uORFome pipeline

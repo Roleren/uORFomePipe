@@ -84,7 +84,8 @@ find_uORFome <- function(mainPath, organism = organism.df(df.rfp), df.rfp, df.rn
   }
 
   makeTrainingAndPredictionData(df.rfp, df.rna, organism = organism, mode = mode,
-                                max.artificial.length = max.artificial.length)
+                                max.artificial.length = max.artificial.length,
+                                BPPARAM = BPPARAM)
 
   #¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
   # 7. Predict uORFs
@@ -148,16 +149,17 @@ getLeadersFromCage <- function(cageFiles, filterValue = 3,
 
   bplapply(cageFiles, FUN = function(cageName, dataFolder, leadersFolder,
                                      regionUORFsFolder, filterValue) {
+    exportNamerdata <- paste0(regionUORFsFolder, basename(p(cageName, ".regionUORF.rds")))
+    if (file.exists(exportNamerdata)) return(0)
     fiveUTRsCage <- reassignTSSbyCage(fiveUTRs, cageName, filterValue = filterValue)
-    exportNamerdataLeader = paste0(leadersFolder, basename(p(cageName, ".leader.rds")))
+    exportNamerdataLeader <- paste0(leadersFolder, basename(p(cageName, ".leader.rds")))
     saveRDS(fiveUTRsCage, file = exportNamerdataLeader)
 
     # Extend cage leaders with CDS
     getCDS()
     uORFSearchRegion <- ORFik:::addCdsOnLeaderEnds(fiveUTRsCage, cds)
-    exportNamerdata = paste0(regionUORFsFolder, basename(p(cageName, ".regionUORF.rds")))
     saveRDS(uORFSearchRegion, file = exportNamerdata)
-
+    return(0)
   }, dataFolder = get("dataFolder", envir = .GlobalEnv),
   leadersFolder = get("leadersFolder", envir = .GlobalEnv),
   regionUORFsFolder = get("regionUORFsFolder", envir = .GlobalEnv),
@@ -251,17 +253,18 @@ makeTrainingAndPredictionData <- function(df.rfp, df.rna,
                                           organism = get("organism", mode = "character", envir = .GlobalEnv),
                                           biomart = get("biomart_dataset", mode = "character", envir = .GlobalEnv),
                                           mode = "uORF",
-                                          max.artificial.length) {
+                                          max.artificial.length, BPPARAM = bpparam()) {
   message("--------------------------------------")
   if (!(mode %in% c("uORF", "CDS", "aCDS")))
     stop("mode must be uORF or CDS or aCDS (artificial CDS)")
 
   ## TRAINING data: Ribo-seq features for cds and 3'
   message("Making training data from CDS and trailers (3' UTRs):")
-  getGeneralRiboFeatures(df.rfp, grl = getCDSFiltered(), preName = "cds")
+  getGeneralRiboFeatures(df.rfp, grl = getCDSFiltered(), preName = "cds", BPPARAM = BPPARAM)
   getThreeUTRs()
   getGeneralRiboFeatures(df.rfp, grl = threeUTRs[widthPerGroup(threeUTRs) > 5],
-                         preName = "three", threeUTRsSpecial = getSpecialThreeUTRs())
+                         preName = "three", threeUTRsSpecial = getSpecialThreeUTRs(),
+                         BPPARAM = BPPARAM)
   uORFomePipe:::makeTrainingData(df.rfp, max.artificial.length = max.artificial.length,
                                  mode = mode)
 
@@ -273,7 +276,8 @@ makeTrainingAndPredictionData <- function(df.rfp, df.rna,
   # Ribo-seq features for ORFs
 
   getGeneralRiboFeatures(df.rfp, df.rna, orfs,
-                         preName = ifelse(mode == "CDS", "verify", ""))
+                         preName = ifelse(mode == "CDS", "verify", ""),
+                         BPPARAM = BPPARAM)
   uORFomePipe:::makeORFPredictionData(df.rfp, mode = mode)
 
   message("Training complete")
