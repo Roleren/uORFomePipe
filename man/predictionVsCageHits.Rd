@@ -8,15 +8,13 @@ predictionVsCageHits(
   saveName = p("differential_", mode, "_usage.png"),
   mode = "uORF",
   prediction = predictUorfs(mode = mode),
-  stop.codons = FALSE
+  stop.codons = FALSE,
+  sort.by = "counts"
 )
 }
 \arguments{
 \item{saveName}{full name of location to save to, default
 "differential_uORF_usage.png"}
-
-\item{mode}{character, default: "uORF". alternative "ORF" or what ever
-region you are checking.}
 
 \item{prediction}{data.table of prediction values in c(0, 1).}
 

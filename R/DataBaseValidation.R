@@ -4,8 +4,6 @@
 #' And start and stop codon usage for combined prediction
 #' @param saveName full name of location to save to, default
 #' "differential_uORF_usage.png"
-#' @param mode character, default: "uORF". alternative "ORF" or what ever
-#' region you are checking.
 #' @inheritParams feature.boxplots
 #' @inheritParams startAndStopCodonPlots
 #' @import ggplot2
@@ -15,12 +13,12 @@
 predictionVsCageHits <- function(saveName = p("differential_", mode, "_usage.png"),
                                  mode = "uORF",
                                  prediction = predictUorfs(mode = mode),
-                                 stop.codons = FALSE) {
+                                 stop.codons = FALSE, sort.by = "counts") {
   if (!(mode %in% c("uORF", "CDS", "aCDS")))
     stop("mode must be uORF or CDS or aCDS (artificial CDS)")
   message("--------------------------------------")
   message("Creating result plots:")
-  pred <- uORFomePipe:::perSampleCountPlot(mode)
+  pred <- uORFomePipe:::perSampleCountPlot(mode, sort.by)
   codons <- uORFomePipe:::startAndStopCodonPlots(stop.codons)
   features <- uORFomePipe:::feature.boxplots(prediction)
   lay <- rbind(1, 1, 2, 3, 3)
@@ -39,8 +37,11 @@ predictionVsCageHits <- function(saveName = p("differential_", mode, "_usage.png
 #' Per sample library plot overall counts
 #'
 #' Divide into active and candidate uORFs
-#' @inheritParams predictionVsCageHits
-perSampleCountPlot <- function(mode = "uORF") {
+#' @param mode character, default: "uORF". alternative "ORF" or what ever
+#' region you are checking.
+#' @param sort.by character, default "count". Sort rows by counts,
+#' or by alphabetical "alpha"
+perSampleCountPlot <- function(mode = "uORF", sort.by = "count") {
   themes.no.y <- theme(axis.text.y = element_text(size = 8),
                        panel.grid.major.y = element_blank(),
                        panel.grid.minor.y = element_blank(),
@@ -48,7 +49,7 @@ perSampleCountPlot <- function(mode = "uORF") {
 
   if (file.exists(paste0(dataFolder,"/tissueAtlas.rds"))) {
     cageTissues <- readRDS(paste0(dataFolder,"/tissueAtlas.rds"))[,-1]
-    cageTissues$total <- rowSums(cageTissues) > 0
+    cageTissues$union <- rowSums(cageTissues) > 0
 
     ncolHits <- rowSums(cageTissues)
     inAll <- sum(ncolHits == ncol(cageTissues))
@@ -62,12 +63,19 @@ perSampleCountPlot <- function(mode = "uORF") {
     values <- c(rep(inAll, ncol(cageRed)), colSums(cageRed[inMoreThanOneNotAll]),
                 colSums(cageRed[inUnique]))
     variable <- rep(colnames(cageRed), 3)
-    type <- c(rep("uORFs in all", ncol(cageRed)), rep("uORFs > 1", ncol(cageRed)),
-              rep("uORFs unique", ncol(cageRed)))
+    type <- c(rep("All", ncol(cageRed)), rep("More than one", ncol(cageRed)),
+              rep("Unique", ncol(cageRed)))
     df <- data.table(value = values, variable, type)
-    df$type <- factor(df$type, levels = c("uORFs in all", "uORFs > 1", "uORFs unique"), ordered = TRUE)
-    df$variable <- factor(df$variable, levels = df[, sum(value),
-                                                   by = variable][order(V1),]$variable, ordered = TRUE)
+    df$type <- factor(df$type, levels = c("All", "More than one", "Unique"), ordered = TRUE)
+    if (sort.by == "count") {
+      df$variable <- factor(df$variable, levels = df[, sum(value),
+                                                     by = variable][order(V1),]$variable, ordered = TRUE)
+    } else {
+      df$variable <- factor(df$variable, levels = rev(c("union",
+                                                        as.character(unique(sort(df$variable[df$variable != "union"]))))),
+                                                    ordered = TRUE)
+    }
+
     df.cage.levels <- levels(df$variable)
     cageAll <- ggplot(df, aes(x=variable,y=value,fill=type)) +
       geom_bar(stat="identity", position =  position_stack(reverse = TRUE)) +
@@ -83,7 +91,8 @@ perSampleCountPlot <- function(mode = "uORF") {
 
   # for prediction
   addit <- ifelse(mode == "CDS", "verify_", "")
-  cageTissuesPrediction <- readTable(p(addit, "tissueAtlasByCageAndPred"), with.IDs = FALSE)
+  cageTissuesPrediction <- readTable(paste0(addit, "tissueAtlasByCageAndPred"), with.IDs = FALSE)
+  colnames(cageTissuesPrediction)[colnames(cageTissuesPrediction) == "total"] <- "union"
   ncolHits <- rowSums(cageTissuesPrediction)
   inAll <- sum(ncolHits == ncol(cageTissuesPrediction))
   inMoreThanOneNotAll <- (ncolHits > 2) & (ncolHits != ncol(cageTissuesPrediction))
@@ -95,10 +104,13 @@ perSampleCountPlot <- function(mode = "uORF") {
   cageRed <- cageTissuesPrediction[, top20, with = FALSE]
   values <- c(rep(inAll, ncol(cageRed)), colSums(cageRed[inMoreThanOneNotAll]), colSums(cageRed[inUnique]))
   variable <- rep(colnames(cageRed), 3)
-  type <- c(rep(p(mode,"s in all"), ncol(cageRed)),
-            rep(p(mode,"s > 1"), ncol(cageRed)), rep(p(mode,"s unique"), ncol(cageRed)))
+  # type <- c(rep(p(mode,"s in all"), ncol(cageRed)),
+  #           rep(p(mode,"s > 1"), ncol(cageRed)), rep(p(mode,"s unique"), ncol(cageRed)))
+  type <- c(rep("All", ncol(cageRed)),
+            rep("More than one", ncol(cageRed)), rep("Unique", ncol(cageRed)))
   df <- data.table(value = values, variable, type)
-  df$type <- factor(df$type, levels = c(p(mode,"s in all"), p(mode,"s > 1"), p(mode,"s unique")), ordered = TRUE)
+  # df$type <- factor(df$type, levels = c(p(mode,"s in all"), p(mode,"s > 1"), p(mode,"s unique")), ordered = TRUE)
+  df$type <- factor(df$type, levels = c("All", "More than one", "Unique"), ordered = TRUE)
   if (exists("df.cage.levels")) {
     df$variable <- factor(df$variable, levels = df.cage.levels, ordered = TRUE)
   } else {
@@ -110,7 +122,7 @@ perSampleCountPlot <- function(mode = "uORF") {
     geom_bar(stat="identity", position =  position_stack(reverse = TRUE)) +
     scale_fill_manual(values = c("#009E73", "#0072B2", "#D55E00")) +
     scale_y_continuous(labels = scales::scientific) +
-    xlab("")+ylab(p("Predicted translated ", mode, "s")) +
+    xlab("")+ylab(paste0("Predicted translated ", mode, "s")) +
     guides() +
     theme_bw() +
     themes.no.y +

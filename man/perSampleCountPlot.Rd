@@ -4,11 +4,14 @@
 \alias{perSampleCountPlot}
 \title{Per sample library plot overall counts}
 \usage{
-perSampleCountPlot(mode = "uORF")
+perSampleCountPlot(mode = "uORF", sort.by = "count")
 }
 \arguments{
 \item{mode}{character, default: "uORF". alternative "ORF" or what ever
 region you are checking.}
+
+\item{sort.by}{character, default "count". Sort rows by counts,
+or by alphabetical "alpha"}
 }
 \description{
 Divide into active and candidate uORFs
