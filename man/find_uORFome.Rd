@@ -6,7 +6,7 @@
 \usage{
 find_uORFome(
   mainPath,
-  organism = organism.df(df.rfp),
+  organism = organism(df.rfp),
   df.rfp,
   df.rna,
   df.cage,
@@ -28,9 +28,11 @@ like Homo sapiens, Danio rerio, etc.}
 
 \item{df.rfp}{ORFik experiment of Ribo-seq}
 
-\item{df.rna}{ORFik experiment of RNA-seq}
+\item{df.rna}{ORFik experiment of RNA-seq,
+set to NULL if you don't have RNA-seq}
 
-\item{df.cage}{ORFik experiment of CAGE, set to NULL if you don't have CAGE.}
+\item{df.cage}{ORFik experiment of CAGE,
+set to NULL if you don't have CAGE.}
 
 \item{startCodons}{default "ATG|CTG|TTG|GTG|AAG|AGG|ACG|ATC|ATA|ATT", set to
 "ATG|CTG|TTG|GTG" for a more certain set.}
@@ -89,9 +91,8 @@ started running, as this might make the program crash
 }
 \examples{
 mainPath <- "~/bio/results/uORFome_Zebrafish"
-organism <- "Danio rerio"
 # df.rfp <- read.experiment("path/to/rfp.csv")
-# df.rna <- read.experiment("path/to/rna.csv")
-# df.cage <- read.experiment("path/to/CAGE.csv")
-# find_uORFome(mainPath, organism, df.rfp, df.rna, df.cage)
+# df.rna <- read.experiment("path/to/rna.csv") # Not required
+# df.cage <- read.experiment("path/to/CAGE.csv") # Not required
+# find_uORFome(mainPath, df.rfp, df.rna, df.cage)
 }

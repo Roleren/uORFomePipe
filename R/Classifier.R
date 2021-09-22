@@ -20,8 +20,9 @@ predictUorfs <- function(tissues = readTable("experiment_groups")[[1]],
                          max_mem_size = "200G",  mode = "uORF") {
   h2o.started <- FALSE
   preName <- ifelse(mode == "CDS", "verify_", "")
+  nTissues <- length(tissues)
   for (tissue in tissues) {
-    message(p("Prediction for tissue: ", tissue))
+    message(p("(",which(tissues == tissue), "/", nTissues,") Prediction for tissue: ", tissue))
 
     # make uORFTable
     if(file.exists(p("prediction_model/prediction_", preName, tissue, ".rds"))) next

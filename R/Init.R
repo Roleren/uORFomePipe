@@ -10,8 +10,10 @@
 #' Rerun and it should work, this is a port issue.
 #' @param mainPath folder for uORFome to put results
 #' @param df.rfp ORFik experiment of Ribo-seq
-#' @param df.rna ORFik experiment of RNA-seq
-#' @param df.cage ORFik experiment of CAGE, set to NULL if you don't have CAGE.
+#' @param df.rna ORFik experiment of RNA-seq,
+#' set to NULL if you don't have RNA-seq
+#' @param df.cage ORFik experiment of CAGE,
+#' set to NULL if you don't have CAGE.
 #' @param organism scientific name of organism,
 #' like Homo sapiens, Danio rerio, etc.
 #' @param biomart default "ensembl", get gene symbols and GO terms for uORF genes. Will
@@ -167,11 +169,15 @@ orfikDirs <- function(mainPath, df.rfp, df.rna, df.cage,
 #' @inheritParams orfikDirs
 validateInputs <- function(df.rfp, df.rna, df.cage, mode) {
   samples.rfp <- nrow(df.rfp);samples.rna <- nrow(df.rna)
-  if (samples.rfp != samples.rna) stop("Not equal samples in RNA-seq and Ribo-seq")
-  if (!all(df.rfp$stage %in% df.rna$stage))
-    stop("Not equal tissues/stages in RNA-seq and Ribo-seq")
-  if (!all(df.rfp$condition %in% df.rna$condition))
-    stop("Not equal conditions in RNA-seq and Ribo-seq")
+  if (is.null(df.rfp)) stop("Ribo-seq must be defined to run!")
+  if (!is.null(df.rna)) {
+    if (samples.rfp != samples.rna) stop("Not equal samples in RNA-seq and Ribo-seq")
+    if (!all(df.rfp$stage %in% df.rna$stage))
+      stop("Not equal tissues/stages in RNA-seq and Ribo-seq")
+    if (!all(df.rfp$condition %in% df.rna$condition))
+      stop("Not equal conditions in RNA-seq and Ribo-seq")
+  }
+
   if (is.null(df.cage)) {
     message("Running without CAGE")
     message("Cancel if this was wrong, and input correct ORFik experiment!")
@@ -181,13 +187,19 @@ validateInputs <- function(df.rfp, df.rna, df.cage, mode) {
   # Making tissue grouping tables
   groups <- bamVarName(df.rfp, skip.replicate = TRUE, skip.libtype = TRUE)
   ugroups <- unique(groups)
+  if (length(ugroups) == 1) {
+    ugroups <- ifelse(ugroups == "", "SingleGroup", ugroups)
+  }
   if (mode %in% c("CDS", "aCDS")) ugroups <- "combined"
   if (tableNotExists("experiment_groups")) insertTable(ugroups, "experiment_groups")
   if (tableNotExists("experiment_groups_all")) insertTable(groups, "experiment_groups_all")
-
-  message(p("Tissues validated, will run for ", length(ugroups), " groups:"))
-  message("Replicates per group:")
-  print(table(groups))
+  if (nrow(df.rfp) == 1) {
+    message(p("Input validated, will run in single library mode:"))
+  } else {
+    message(p("Tissues validated, will run for ", length(ugroups), " groups:"))
+    message("Replicates per group:")
+    print(table(groups))
+  }
   return(invisible(NULL))
 }
 

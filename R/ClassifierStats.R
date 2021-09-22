@@ -11,6 +11,10 @@
 startCodonMetrics <- function(hits, tissue = NULL,
                               StartCodons = getAllSequenceFeaturesTable()$StartCodons) {
   if (!is.null(tissue)) message(p("Start codon distribution for tissue: ", tissue))
+  if (length(unique(StartCodons)) == 1) {
+    print(paste("number of uORFs predicted translated:", sum(hits)))
+    return(invisible(NULL))
+  }
   if (sum(hits) == 0) {
     warning("No ORFs predicted as active, check your input data!")
     return(invisible(NULL))

@@ -17,7 +17,8 @@ makeTrainingAndPredictionData(
 \arguments{
 \item{df.rfp}{ORFik experiment of Ribo-seq}
 
-\item{df.rna}{ORFik experiment of RNA-seq}
+\item{df.rna}{ORFik experiment of RNA-seq,
+set to NULL if you don't have RNA-seq}
 
 \item{organism}{scientific name of organism,
 like Homo sapiens, Danio rerio, etc.}

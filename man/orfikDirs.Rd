@@ -21,9 +21,11 @@ orfikDirs(
 
 \item{df.rfp}{ORFik experiment of Ribo-seq}
 
-\item{df.rna}{ORFik experiment of RNA-seq}
+\item{df.rna}{ORFik experiment of RNA-seq,
+set to NULL if you don't have RNA-seq}
 
-\item{df.cage}{ORFik experiment of CAGE, set to NULL if you don't have CAGE.}
+\item{df.cage}{ORFik experiment of CAGE,
+set to NULL if you don't have CAGE.}
 
 \item{organism}{scientific name of organism,
 like Homo sapiens, Danio rerio, etc.}

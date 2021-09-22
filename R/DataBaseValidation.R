@@ -54,7 +54,7 @@ perSampleCountPlot <- function(mode = "uORF", sort.by = "count") {
     ncolHits <- rowSums(cageTissues)
     inAll <- sum(ncolHits == ncol(cageTissues))
     inMoreThanOneNotAll <- (ncolHits > 2) & (ncolHits != ncol(cageTissues))
-    inUnique <- ncolHits <= 2 & ncolHits > 0
+    inUnique <- (ncolHits <= 2 & ncolHits > 0) & (ncol(cageTissues) > 2)
     if ((inAll + sum(inMoreThanOneNotAll) + sum(inUnique)) != sum(ncolHits > 0))
       stop("A bug in split of CAGE Prediction hits, report bug on github!")
     top20 <- names(sort(-colSums(cageTissues)))[1:min(20, ncol(cageTissues))]

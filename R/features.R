@@ -129,8 +129,11 @@ getGeneralRiboFeatures <- function(df.rfp, df.rna = NULL,
         RNA <- if (!is.null(Y)) {
           fimport(Y, style)
         } else NULL
-        weight.RNA = 1L
-        if (!is.null(mcols(RNA)$score)) weight.RNA <- "score"
+        weight.RNA <- 1L
+        if (!is.null(RNA)) {
+          if (!is.null(mcols(RNA)$score)) weight.RNA <- "score"
+        }
+
 
         ORFik:::allFeaturesHelper(grl, RFP = fimport(X, style), RNA = RNA, tx, fiveUTRs, cds ,
                                   threeUTRs,

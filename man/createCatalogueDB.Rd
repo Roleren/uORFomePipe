@@ -13,7 +13,8 @@ createCatalogueDB(
 )
 }
 \arguments{
-\item{df.cage}{ORFik experiment of CAGE, set to NULL if you don't have CAGE.}
+\item{df.cage}{ORFik experiment of CAGE,
+set to NULL if you don't have CAGE.}
 }
 \description{
 Step 4 of uORFome pipeline

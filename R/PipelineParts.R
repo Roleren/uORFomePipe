@@ -34,12 +34,11 @@
 #' @export
 #' @examples
 #' mainPath <- "~/bio/results/uORFome_Zebrafish"
-#' organism <- "Danio rerio"
 #' # df.rfp <- read.experiment("path/to/rfp.csv")
-#' # df.rna <- read.experiment("path/to/rna.csv")
-#' # df.cage <- read.experiment("path/to/CAGE.csv")
-#' # find_uORFome(mainPath, organism, df.rfp, df.rna, df.cage)
-find_uORFome <- function(mainPath, organism = organism.df(df.rfp), df.rfp, df.rna, df.cage,
+#' # df.rna <- read.experiment("path/to/rna.csv") # Not required
+#' # df.cage <- read.experiment("path/to/CAGE.csv") # Not required
+#' # find_uORFome(mainPath, df.rfp, df.rna, df.cage)
+find_uORFome <- function(mainPath, organism = organism(df.rfp), df.rfp, df.rna, df.cage,
                          startCodons = "ATG|CTG|TTG|GTG|AAG|AGG|ACG|ATC|ATA|ATT",
                          stopCodons = "TAA|TAG|TGA", mode = "uORF",
                          max.artificial.length = 100,
@@ -136,6 +135,10 @@ getLeadersFromCage <- function(cageFiles, filterValue = 3,
   if (is.null(cageFiles)) {
     message("Running pipeline without CAGE data, set to NULL")
     groups <- readTable("experiment_groups")[[1]]
+    if (file.exists(paste0(regionUORFsFolder, "_", groups[length(groups)], ".regionUORF.rds"))) {
+      message("finished new 5' UTRs and uORF search regions (already exist)")
+      return(invisible(NULL))
+    }
     getCDS()
     uORFSearchRegion <- ORFik:::addCdsOnLeaderEnds(fiveUTRs, cds)
     for(g in groups) {
@@ -181,7 +184,7 @@ getCandidateuORFs <- function(folder = regionUORFsFolder,
                               stopCodons = "TAA|TAG|TGA",
                               BPPARAM = bpparam()) {
   message("Searching for candidate uORFs")
-  leadersList = list.files(folder, full.names = TRUE)
+  leadersList <- list.files(folder, full.names = TRUE)
   uORFomePipe:::getCDS()
   convertCodonStyle <- function(codons) {
     if (length(codons) > 1) {
@@ -221,8 +224,11 @@ getIDsFromUorfs <- function(folder = uorfFolder, BPPARAM = bpparam()){
   message("Creating uORF ID's")
   bplapply(uorfFiles, function(i) {
     saveName = paste0(idFolder, gsub("uorf.rds","", basename(i)), "uorfID.rds")
-    saveRDS(unique(ORFik:::orfID(readRDS(i))), file = saveName)
-    return(i)
+    if (!file.exists(saveName)) {
+      saveRDS(unique(ORFik:::orfID(readRDS(i))), file = saveName)
+      return(i)
+    }
+    return(0)
   }, BPPARAM = BPPARAM)
 }
 
