@@ -31,7 +31,7 @@ getORFsGoTerms <- function(geneNames, organism){
 }
 
 #' Guess biomart from organism name
-#' @inheritParams orfikDirs
+#' @inheritParams checkAndInitPipe
 #' @importFrom biomaRt listDatasets
 #' @importFrom biomaRt useEnsembl
 #' @return a character with dataset used
@@ -45,7 +45,7 @@ getBiomartFromOrganism <- function(organism, biomart="ensembl") {
        x = a$dataset, value = FALSE, ignore.case = TRUE),][, 1:2]
   if (nrow(guess) == 0) {
     message(p("Did not find biomart candidate for organism", organism))
-    message("Set the 'dataset' argument in orfikDirs(dataset = ) from this list:")
+    message("Set the 'dataset' argument in checkAndInitPipe(dataset = ) from this list:")
     print(a)
     stop()
   }
@@ -53,7 +53,7 @@ getBiomartFromOrganism <- function(organism, biomart="ensembl") {
     message(p("Found multiple biomart candidates for organism", organism))
     message("Possibilities were")
     print(guess)
-    message("Set the 'dataset' argument in orfikDirs(dataset = ) to correct choice this list:")
+    message("Set the 'dataset' argument in checkAndInitPipe(dataset = ) to correct choice this list:")
     print(a)
     stop()
   }

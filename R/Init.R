@@ -30,12 +30,19 @@
 #' @importFrom tools file_ext
 #' @importFrom BiocParallel registered
 #' @export
-orfikDirs <- function(mainPath, df.rfp, df.rna, df.cage,
+checkAndInitPipe <- function(mainPath, df.rfp, df.rna, df.cage,
                       organism, biomart = "ensembl", mode = "uORF",
                       startCodons.cds.allowed = c("ATG", "CTG", "TTG", "AAG", "AGG"),
-                      stopCodons.cds.allowed = c("TAA", "TGA", "TAG")) {
+                      stopCodons.cds.allowed = c("TAA", "TGA", "TAG"),
+                      features = c("countRFP", "disengagementScores", "entropyRFP", "floss",
+                                   "fpkmRFP","ioScore", "ORFScores", "RRS", "RSS", "startCodonCoverage",
+                                   "startRegionCoverage","startRegionRelative")) {
   if (!(mode %in% c("uORF", "CDS", "aCDS")))
     stop("mode must be uORF or CDS or aCDS (artificial CDS)")
+  stopifnot(all(features %in% c("countRFP", "disengagementScores", "entropyRFP", "floss",
+                          "fpkmRFP","ioScore", "ORFScores", "RRS", "RSS", "startCodonCoverage",
+                          "startRegionCoverage","startRegionRelative")))
+  stopifnot(length(features) == length(unique(features)))
 
   dir.create(mainPath, showWarnings = FALSE, recursive = TRUE)
   setwd(mainPath)
@@ -166,7 +173,7 @@ orfikDirs <- function(mainPath, df.rfp, df.rna, df.cage,
 }
 
 #' Validation of experiments
-#' @inheritParams orfikDirs
+#' @inheritParams checkAndInitPipe
 validateInputs <- function(df.rfp, df.rna, df.cage, mode) {
   samples.rfp <- nrow(df.rfp);samples.rna <- nrow(df.rna)
   if (is.null(df.rfp)) stop("Ribo-seq must be defined to run!")

@@ -1,5 +1,5 @@
 #' Get sequence features from orfik
-#' @inheritParams orfikDirs
+#' @inheritParams checkAndInitPipe
 #' @param grl the orfs as GRangesList, default uORFomePipe:::getUorfsInDb()
 #' @return return(invisible(NULL)
 getSequenceFeatures <- function(organism, biomart,

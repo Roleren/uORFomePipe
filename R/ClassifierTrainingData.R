@@ -3,10 +3,6 @@
 #' Positive set is cds, negative is downstream region of 3' UTRs
 #' @param tissues Tissue to train on, use "combined" if you want all in one,
 #' first run of training it is a ORFik experiment.
-#' @param features features to train model on, must exist in database, default:
-#' c("countRFP", "disengagementScores", "entropyRFP", "floss",
-#' "fpkmRFP","ioScore", "ORFScores", "RRS", "RSS", "startCodonCoverage",
-#' "startRegionCoverage","startRegionRelative")
 #' @inheritParams makeTrainingAndPredictionData
 #' @return invisible(NULL), saved to disc
 makeTrainingData <- function(tissues = "combined",
@@ -14,7 +10,8 @@ makeTrainingData <- function(tissues = "combined",
                                           "fpkmRFP","ioScore", "ORFScores", "RRS", "RSS", "startCodonCoverage",
                                           "startRegionCoverage","startRegionRelative"),
                              mode = "uORF", max.artificial.length,
-                             dataFolder = get("dataFolder", envir = .GlobalEnv)) {
+                             dataFolder = get("dataFolder", envir = .GlobalEnv),
+                             requiredActiveCds = 30) {
 
   cds_file <- p(dataFolder, "/uniqueUorfsAsGRWithTx_verify",".rdata")
   if (mode == "CDS" & !file.exists(cds_file)) { # If CDS
@@ -41,21 +38,24 @@ makeTrainingData <- function(tissues = "combined",
     pos <-bplapply(posFeatureNames, function(x, tissue) {
       uORFomePipe:::getTissueFromFeatureTable(x, tissue = tissue)
     }, tissue = tissue); pos <- as.matrix(setDT(unlist(pos, recursive = FALSE)))
+    colnames(pos) <- features
 
     neg <-bplapply(negFeatureNames, function(x) {
       uORFomePipe:::getTissueFromFeatureTable(tableName = x, tissue = tissue)
     }); neg <- as.matrix(setDT(unlist(neg, recursive = FALSE)))
+    colnames(neg) <- features
 
     # Filter out translating 3' UTRs
-    weakThree <- uORFomePipe:::weakTrailer(coverage = neg[,1], fpkm = neg[,5],
-                                           startRegionRelative = neg[,12],
-                                           ORFScore = neg[,7])
+    weakThree <- uORFomePipe:::weakTrailer(coverage = neg[,"countRFP"], fpkm = neg[,"fpkmRFP"],
+                                           startRegionRelative = neg[,"startRegionRelative"],
+                                           ORFScore = neg[,"ORFScores"])
     # Filter out non-translating CDS'
-    strongCDS <- uORFomePipe:::strongCDS(coverage = pos[,1], fpkm = pos[,5],
-                                         startCodonCoverage = pos[,11],
-                                         startRegionRelative = pos[,12],
-                                         ORFScore = pos[,7])
-    if (sum(strongCDS) < 30) stop("Training on less than 30 valid 'active' CDS is not allowed!")
+    strongCDS <- uORFomePipe:::strongCDS(coverage = pos[,"countRFP"], fpkm = pos[,"fpkmRFP"],
+                                         startCodonCoverage = pos[,"startCodonCoverage"],
+                                         startRegionRelative = pos[,"startRegionRelative"],
+                                         ORFScore = pos[,"ORFScores"])
+    if (sum(strongCDS) < requiredActiveCds)
+      stop("Training on less than ", requiredActiveCds, " valid 'active' CDS is not allowed!")
     # If artificial uORFs split set in two:
     indices <- seq.int(length(strongCDS))
     if (mode == "aCDS" & !file.exists(p(dataFolder, "/uniqueUorfsAsGRWithTx",".rdata"))) {

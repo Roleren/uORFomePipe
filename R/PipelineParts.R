@@ -14,7 +14,7 @@
 #' NOTE: IF it crashes it will continue from the point you quit, so delete the mainPath
 #' folder if you want fresh rerun.\cr Also do not change working directory after you
 #' started running, as this might make the program crash
-#' @inheritParams orfikDirs
+#' @inheritParams checkAndInitPipe
 #' @inheritParams getCandidateuORFs
 #' @inheritParams BiocParallel::register
 #' @param max.artificial.length integer, default: 100, only applies if mode = "aCDS",
@@ -23,7 +23,14 @@
 #' this number is 1/6 of maximum size of ORFs (max size 600 if artificialLength is 100)
 #' Will sample random size from 6 to that number, if max.artificial.length is
 #' 2, you can get artificial ORFs of size (6, 9 or 12) (6, + 6 + (3x1), 6 + (3x2))
-#'
+#' @param features features to train model on, any of the features created
+#' during ORFik::computeFeatures, default:
+#' \code{c("countRFP", "disengagementScores", "entropyRFP", "floss",
+#' "fpkmRFP","ioScore", "ORFScores", "RRS", "RSS", "startCodonCoverage",
+#' "startRegionCoverage","startRegionRelative")}
+#' @param requiredActiveCds numeric, default 30. How many CDSs are required to be
+#' detected active. Size of minimum positive training set. Will abort if not
+#' bigger than this number.
 #' @return the prediction as data.table with 3 columns. Prediction (0 or 1),
 #' p0 (probability of a negtive prediction), p1 (probability of positive prediction).
 #' Only one of p0 and p1 can be > 0.5, and that value will decide if
@@ -41,20 +48,24 @@
 find_uORFome <- function(mainPath, organism = organism(df.rfp), df.rfp, df.rna, df.cage,
                          startCodons = "ATG|CTG|TTG|GTG|AAG|AGG|ACG|ATC|ATA|ATT",
                          stopCodons = "TAA|TAG|TGA", mode = "uORF",
-                         max.artificial.length = 100,
+                         requiredActiveCds = 30, max.artificial.length = 100,
                          startCodons.cds.allowed = startCodons,
                          stopCodons.cds.allowed = stopCodons,
                          biomart = "ensembl",
+                         features = c("countRFP", "disengagementScores", "entropyRFP", "floss",
+                                      "fpkmRFP","ioScore", "ORFScores", "RRS", "RSS", "startCodonCoverage",
+                                      "startRegionCoverage","startRegionRelative"),
                          BPPARAM = bpparam()) {
   #¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
   # Create folders, variables and validate input
   #¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
-  orfikDirs(mainPath = mainPath,
+  checkAndInitPipe(mainPath = mainPath,
             df.rfp, df.rna, df.cage,
             organism = organism, biomart = biomart,
             mode = mode,
             startCodons.cds.allowed = startCodons.cds.allowed,
-            stopCodons.cds.allowed = stopCodons.cds.allowed)
+            stopCodons.cds.allowed = stopCodons.cds.allowed,
+            features = features)
   if (mode == "uORF") {
     #¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
     # 2. Find uORF search region per CAGE
@@ -84,6 +95,8 @@ find_uORFome <- function(mainPath, organism = organism(df.rfp), df.rfp, df.rna, 
 
   makeTrainingAndPredictionData(df.rfp, df.rna, organism = organism, mode = mode,
                                 max.artificial.length = max.artificial.length,
+                                features = features,
+                                requiredActiveCds = requiredActiveCds,
                                 BPPARAM = BPPARAM)
 
   #¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
@@ -133,7 +146,7 @@ getLeadersFromCage <- function(cageFiles, filterValue = 3,
   message("Starting to find uORF search spaces")
   uORFomePipe:::getLeaders()
   if (is.null(cageFiles)) {
-    message("Running pipeline without CAGE data, set to NULL")
+    message("Running pipeline without CAGE data")
     groups <- readTable("experiment_groups")[[1]]
     if (file.exists(paste0(regionUORFsFolder, "_", groups[length(groups)], ".regionUORF.rds"))) {
       message("finished new 5' UTRs and uORF search regions (already exist)")
@@ -148,7 +161,7 @@ getLeadersFromCage <- function(cageFiles, filterValue = 3,
     return(invisible(NULL))
   }
 
-  if (is(cageFiles, "experiment")) cageFiles <- filepath(cageFiles, "bedo")
+  if (is(cageFiles, "experiment")) cageFiles <- filepath(cageFiles, "ofst")
 
   bplapply(cageFiles, FUN = function(cageName, dataFolder, leadersFolder,
                                      regionUORFsFolder, filterValue) {
@@ -261,7 +274,11 @@ makeTrainingAndPredictionData <- function(df.rfp, df.rna,
                                           organism = get("organism", mode = "character", envir = .GlobalEnv),
                                           biomart = get("biomart_dataset", envir = .GlobalEnv),
                                           mode = "uORF",
-                                          max.artificial.length, BPPARAM = bpparam()) {
+                                          features = c("countRFP", "disengagementScores", "entropyRFP", "floss",
+                                                       "fpkmRFP","ioScore", "ORFScores", "RRS", "RSS", "startCodonCoverage",
+                                                       "startRegionCoverage","startRegionRelative"),
+                                          max.artificial.length, requiredActiveCds = 30,
+                                          BPPARAM = bpparam()) {
   message("--------------------------------------")
   if (!(mode %in% c("uORF", "CDS", "aCDS")))
     stop("mode must be uORF or CDS or aCDS (artificial CDS)")
@@ -274,7 +291,8 @@ makeTrainingAndPredictionData <- function(df.rfp, df.rna,
                          preName = "three", threeUTRsSpecial = getSpecialThreeUTRs(),
                          BPPARAM = BPPARAM)
   uORFomePipe:::makeTrainingData(df.rfp, max.artificial.length = max.artificial.length,
-                                 mode = mode)
+                                 mode = mode, features = features,
+                                 requiredActiveCds = requiredActiveCds)
 
   ## Prediction data: Sequence and Ribo-seq features for uORFs / artificial CDS
   # first sequence features
@@ -286,7 +304,7 @@ makeTrainingAndPredictionData <- function(df.rfp, df.rna,
   getGeneralRiboFeatures(df.rfp, df.rna, orfs,
                          preName = ifelse(mode == "CDS", "verify", ""),
                          BPPARAM = BPPARAM)
-  uORFomePipe:::makeORFPredictionData(df.rfp, mode = mode)
+  uORFomePipe:::makeORFPredictionData(df.rfp, mode = mode, features = features)
 
   message("Training complete")
   return(invisible(NULL))

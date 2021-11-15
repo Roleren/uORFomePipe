@@ -13,10 +13,14 @@ find_uORFome(
   startCodons = "ATG|CTG|TTG|GTG|AAG|AGG|ACG|ATC|ATA|ATT",
   stopCodons = "TAA|TAG|TGA",
   mode = "uORF",
+  requiredActiveCds = 30,
   max.artificial.length = 100,
   startCodons.cds.allowed = startCodons,
   stopCodons.cds.allowed = stopCodons,
   biomart = "ensembl",
+  features = c("countRFP", "disengagementScores", "entropyRFP", "floss", "fpkmRFP",
+    "ioScore", "ORFScores", "RRS", "RSS", "startCodonCoverage", "startRegionCoverage",
+    "startRegionRelative"),
   BPPARAM = bpparam()
 )
 }
@@ -44,6 +48,10 @@ on uORFs or artificial CDS. if "aCDS" will run twice once for whole length CDS a
 truncated CDS to validate model works for short ORFs. "CDS" is option to predict on
 whole CDS.}
 
+\item{requiredActiveCds}{numeric, default 30. How many CDSs are required to be
+detected active. Size of minimum positive training set. Will abort if not
+bigger than this number.}
+
 \item{max.artificial.length}{integer, default: 100, only applies if mode = "aCDS",
 so ignore this for most people,
 when creating artificial ORFs from CDS, how large should maximum ORFs be,
@@ -60,6 +68,12 @@ Which stop codons can the CDS you train on have ?}
 \item{biomart}{default "ensembl", get gene symbols and GO terms for uORF genes. Will
 be automaticly detected by organism name in ensembl database.
 Set to NULL if you don't want to check Gene symbols and GO terms.}
+
+\item{features}{features to train model on, any of the features created
+during ORFik::computeFeatures, default:
+\code{c("countRFP", "disengagementScores", "entropyRFP", "floss",
+"fpkmRFP","ioScore", "ORFScores", "RRS", "RSS", "startCodonCoverage",
+"startRegionCoverage","startRegionRelative")}}
 
 \item{BPPARAM}{
     An instance of a \code{BiocParallelParam} class, e.g.,

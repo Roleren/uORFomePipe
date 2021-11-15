@@ -21,10 +21,11 @@ on uORFs or artificial CDS. if "aCDS" will run twice once for whole length CDS a
 truncated CDS to validate model works for short ORFs. "CDS" is option to predict on
 whole CDS.}
 
-\item{features}{features to train model on, must exist in database, default:
-c("countRFP", "disengagementScores", "entropyRFP", "floss",
+\item{features}{features to train model on, any of the features created
+during ORFik::computeFeatures, default:
+\code{c("countRFP", "disengagementScores", "entropyRFP", "floss",
 "fpkmRFP","ioScore", "ORFScores", "RRS", "RSS", "startCodonCoverage",
-"startRegionCoverage","startRegionRelative")}
+"startRegionCoverage","startRegionRelative")}}
 }
 \description{
 Get ribo-seq features for uORFs

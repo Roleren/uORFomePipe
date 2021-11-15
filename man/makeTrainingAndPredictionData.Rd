@@ -10,7 +10,11 @@ makeTrainingAndPredictionData(
   organism = get("organism", mode = "character", envir = .GlobalEnv),
   biomart = get("biomart_dataset", envir = .GlobalEnv),
   mode = "uORF",
+  features = c("countRFP", "disengagementScores", "entropyRFP", "floss", "fpkmRFP",
+    "ioScore", "ORFScores", "RRS", "RSS", "startCodonCoverage", "startRegionCoverage",
+    "startRegionRelative"),
   max.artificial.length,
+  requiredActiveCds = 30,
   BPPARAM = bpparam()
 )
 }
@@ -30,12 +34,22 @@ on uORFs or artificial CDS. if "aCDS" will run twice once for whole length CDS a
 truncated CDS to validate model works for short ORFs. "CDS" is option to predict on
 whole CDS.}
 
+\item{features}{features to train model on, any of the features created
+during ORFik::computeFeatures, default:
+\code{c("countRFP", "disengagementScores", "entropyRFP", "floss",
+"fpkmRFP","ioScore", "ORFScores", "RRS", "RSS", "startCodonCoverage",
+"startRegionCoverage","startRegionRelative")}}
+
 \item{max.artificial.length}{integer, default: 100, only applies if mode = "aCDS",
 so ignore this for most people,
 when creating artificial ORFs from CDS, how large should maximum ORFs be,
 this number is 1/6 of maximum size of ORFs (max size 600 if artificialLength is 100)
 Will sample random size from 6 to that number, if max.artificial.length is
 2, you can get artificial ORFs of size (6, 9 or 12) (6, + 6 + (3x1), 6 + (3x2))}
+
+\item{requiredActiveCds}{numeric, default 30. How many CDSs are required to be
+detected active. Size of minimum positive training set. Will abort if not
+bigger than this number.}
 
 \item{BPPARAM}{
     An instance of a \code{BiocParallelParam} class, e.g.,

@@ -77,6 +77,7 @@ if (!exp_exists) { # Create experiments only once!
                     txdb = gtf.file, fa = genome.file)
   df.cage <- read.experiment(exp.name.CAGE) # If this works, you made a valid experiment
   # Collapse CAGE reads at same position, make score column and subset to 5' ends
+  # Files are saved in a folder called /ofst/ relative to your default CAGE files
   convertLibs(df.cage, addScoreColumn = TRUE, addSizeColumn = FALSE, method = "5prime"); remove.experiments(df.cage)
   # RFP (Ribo-seq)
   create.experiment("/data/processed_data/Ribo-seq/chew_2013_zebrafish/final_results/aligned_GRCz10",
@@ -90,7 +91,7 @@ if (!exp_exists) { # Create experiments only once!
   "/data/processed_data/RNA-seq/chew_2013_and_pauli_2012_zebrafish/final_results/aligned_GRCz10/sorted",
                     exper = exp.name.RNA, txdb = gtf.file, fa = genome.file)
   df.rna <- read.experiment(exp.name.RNA)
-  convertLibs(df.rna, addScoreColumn = TRUE, type = "bedo"); remove.experiments(df.rna)
+  convertLibs(df.rna, addScoreColumn = TRUE, type = "ofst"); remove.experiments(df.rna)
 }
 ```
 
@@ -148,12 +149,14 @@ You need to set these parameters in the find_uORFome function:
 3. organism: For GO analysis we need to know which organism this is (scientific name)
 4. Start and stop codons wanted, like startCodons = c("ATG", "CTG", "TTG") etc.
 To run simply do:
+5. Get Gene onthology metrics or not (Set biomart = NULL to skip, it takes some time to run, so skip if not needed)
 ```r
 find_uORFome(mainPath = "~/results/uORFome_zebrafish",
              organism = "Danio rerio", 
              df.rfp, df.rna, df.cage,
              startCodons = c("ATG", "CTG", "TTG"), 
-             stopCodons = c("TAA", "TGA", "TAG"))
+             stopCodons = c("TAA", "TGA", "TAG"), 
+             biomart = NULL)
 # scientific name for organism, will let you know if you misspelled
 ```
              
@@ -161,7 +164,7 @@ Next I will describe each step in more detail that happens inside find_uORFome:
 
 # Initializing uORFomePipe
 First of the pipeline is initialized by verifying all input, creating directories and database.
-These parameters needs to be set in the orfikDirs function:
+These parameters needs to be set in the checkAndInitPipe function:
 1. mainPath: the directory to use for uORFomePipe results
 2. df.rfp, df.rna, df.cage: the Ribo-seq, RNA-seq and CAGE ORFik experiments
 3. organism: For GO analysis we need to know which organism this is (scientific name)
@@ -172,11 +175,10 @@ These parameters needs to be set in the orfikDirs function:
 #¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
 
 
-orfikDirs(mainPath = "~/results/uORFome_zebrafish",
-          df.rfp, df.rna, df.cage,
-          organism = "Danio rerio") # <- scientific name for organism, will let you know if you misspelled
+checkAndInitPipe(mainPath = "~/results/uORFome_zebrafish",
+          df.rfp, df.rna, df.cage)
 ```
-If the function orfikDirs does not give you an error, you are good to go.
+If the function checkAndInitPipe does not give you an error, you are good to go.
 
 # Creating the uORF features used for prediction
 
@@ -279,7 +281,7 @@ if (!exp_exists) { # Create experiments only once!
   "/data/processed_data/RNA-seq/chew_2013_and_pauli_2012_zebrafish/final_results/aligned_GRCz10/sorted",
                     exper = exp.name.RNA, txdb = gtf.file, fa = genome.file, organism = organism)
   df.rna <- read.experiment(exp.name.RNA)
-  convertLibs(df.rna, addScoreColumn = TRUE, type = "bedo"); remove.experiments(df.rna)
+  convertLibs(df.rna, addScoreColumn = TRUE, type = "ofst"); remove.experiments(df.rna)
 }
 #¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤#
 # INIT (START HERE)
