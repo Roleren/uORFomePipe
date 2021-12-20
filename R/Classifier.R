@@ -8,7 +8,8 @@
 #'  use "combined" if you want mean of all groups
 #' @param ip h2o cluster ip, default: "localhost".
 #' @param port h2o cluster port, default: 54321
-#' @param nthreads_h2o number of cores for H20: default max(45, detectCores()/2)
+#' @param nthreads_h2o number of cores for H20. Default:
+#' \code{max(min(45, as.integer(BiocParallel::bpparam()$workers/2)), 1)}
 #' @param max_mem_size max allowed memory for H20: default ("200G")
 #' @param mode character, default "uORF"
 #' @export
@@ -16,7 +17,7 @@
 predictUorfs <- function(tissues = readTable("experiment_groups")[[1]],
                          ip = "localhost",
                          port = 54321,
-                         nthreads_h2o = min(45, as.integer(detectCores()/2)),
+                         nthreads_h2o = max(min(45, as.integer(BiocParallel::bpparam()$workers/2)), 1),
                          max_mem_size = "200G",  mode = "uORF") {
   h2o.started <- FALSE
   preName <- ifelse(mode == "CDS", "verify_", "")
@@ -43,7 +44,7 @@ predictUorfs <- function(tissues = readTable("experiment_groups")[[1]],
 trainClassifier <- function(tissue,
                             ip = "localhost",
                             port = 54321,
-                            nthreads_h2o = min(45, as.integer(detectCores()/2)),
+                            nthreads_h2o = max(min(45, as.integer(BiocParallel::bpparam()$workers/2)), 1),
                             max_mem_size = "200G") {
 
   if(file.exists(paste0("prediction_model/randomForrest_",tissue))) {

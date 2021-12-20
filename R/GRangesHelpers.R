@@ -3,6 +3,7 @@
 #' @return GRangesList
 #' @importFrom data.table fread
 #' @importFrom data.table tstrsplit
+#' @importFrom data.table rbindlist
 toGRFromUniqueID <- function(uniqueIDs) {
 
   if (class(uniqueIDs)[1] != "data.table"){

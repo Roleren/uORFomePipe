@@ -8,7 +8,7 @@ trainClassifier(
   tissue,
   ip = "localhost",
   port = 54321,
-  nthreads_h2o = min(45, as.integer(detectCores()/2)),
+  nthreads_h2o = max(min(45, as.integer(BiocParallel::bpparam()$workers/2)), 1),
   max_mem_size = "200G"
 )
 }
@@ -19,7 +19,8 @@ trainClassifier(
 
 \item{port}{h2o cluster port, default: 54321}
 
-\item{nthreads_h2o}{number of cores for H20: default max(45, detectCores()/2)}
+\item{nthreads_h2o}{number of cores for H20. Default:
+\code{max(min(45, as.integer(BiocParallel::bpparam()$workers/2)), 1)}}
 
 \item{max_mem_size}{max allowed memory for H20: default ("200G")}
 }

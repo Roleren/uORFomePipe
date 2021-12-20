@@ -76,6 +76,7 @@ readTable <- function(tableName, asGR = FALSE, with.IDs = TRUE,
 
 #' List current tables in database
 #' @inheritParams deleteDataBase
+#' @importFrom DBI dbListTables
 #' @export
 listTables <- function(uorfDB = get("uorfDB", envir = .GlobalEnv)){
   sort(dbListTables(uorfDB))
