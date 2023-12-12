@@ -34,8 +34,8 @@ createGRObjects <- function(dataFolder, leadersFolder){
     grl <- toGRFromUniqueID(readTable("uniqueIDs"))
     uniqueIDs <- ORFik:::orfID(grl)
     save(grl, file = p(dataFolder, "/uniqueUorfsAsGR.rdata"))
-    insertTable(Matrix = uniqueIDs, tableName =  "uniqueIDs", rmOld = T)
-    insertTable(Matrix = grl,tableName = "SplittedByExonsuniqueUORFs", rmOld = T)
+    insertTable(Matrix = uniqueIDs, tableName =  "uniqueIDs", rmOld = TRUE)
+    insertTable(Matrix = grl,tableName = "SplittedByExonsuniqueUORFs", rmOld = TRUE)
 
     # make all spanning cage leader from cage
     allLeadersSpanningLeader(leadersFolder, dataFolder)

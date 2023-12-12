@@ -4,7 +4,7 @@
 \alias{p}
 \title{shortcut for paste0()}
 \usage{
-p(..., collapse = NULL)
+p(..., collapse = NULL, recycle0 = FALSE)
 }
 \arguments{
 \item{...}{
@@ -14,6 +14,11 @@ p(..., collapse = NULL)
     \code{\link[base]{NA_character_}}.}
     \item{\code{collapse}}{an optional character string to separate the results.  Not
     \code{\link[base]{NA_character_}}.}
+    \item{\code{recycle0}}{\code{\link[base]{logical}} indicating if zero-length
+    character arguments should lead to the zero-length
+    \code{\link[base]{character}(0)} after the \code{sep}-phase (which turns into
+    \code{""} in the \code{collapse}-phase, i.e., when \code{collapse} is
+    not \code{NULL}).}
   }}
 }
 \description{

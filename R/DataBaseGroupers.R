@@ -48,7 +48,7 @@ allLeadersSpanningLeader <- function(leadersFolder, dataFolder){
   fTot <- fiveUTRs
   fTot[either] <- fOut
   fTot[inside] <- fInNew
-  if(!all(ORFik:::widthPerGroup(fTot, F) == maxWidths)) {
+  if(!all(ORFik::widthPerGroup(fTot, FALSE) == maxWidths)) {
     stop("Algorithm is wrong for five extension!")
   }
 
@@ -73,7 +73,7 @@ linkORFsToTx <- function(dataFolder){
   if (!file.exists(p(dataFolder,"/uniqueUorfsAsGRWithTx.rdata"))) {
     message("Linking ORFs to transcripts")
     leaders <- leaderCage()
-    grl <- getUorfsInDb(T, F, F)
+    grl <- getUorfsInDb(TRUE, FALSE, FALSE)
     overlaps <- findOverlaps(grl, leaders, type = "within")
     if( length(unique(from(overlaps))) != length(grl)) {
       stop("leader is not spanning all uORFs, check for uORFs going into cds.")
@@ -85,23 +85,23 @@ linkORFsToTx <- function(dataFolder){
     txNames <- names(leaders)[to]
     uorfIDs <- ORFik:::orfID(grl)[from]
     dt <- data.table(uorfID = uorfIDs, txNames = txNames)
-    insertTable(Matrix = dt, tableName = "linkORFsToTx",rmOld = T)
+    insertTable(Matrix = dt, tableName = "linkORFsToTx", rmOld = TRUE)
 
     # now make grl with transcript mapping
     grlb <- grl[from]
     names(grlb@unlistData) <- NULL
     names(grlb) <- txNames
-    asGR <- unlist(grlb, use.names = T)
+    asGR <- unlist(grlb, use.names = TRUE)
     names(grlb@unlistData) <- names(asGR)
 
-    grl <- ORFik:::makeORFNames(grlb, F)
+    grl <- ORFik:::makeORFNames(grlb, FALSE)
     save(grl, file = p(dataFolder,"/uoRFsAsGRAllWithTx.rdata"))
     # Unique uORFs
-    c <- ORFik:::orfID(grl, with.tx = F)
+    c <- ORFik:::orfID(grl, with.tx = FALSE)
     d <- which(!duplicated(c))
     grl <- grl[d]
-    insertTable(Matrix = data.table(d), tableName = "toUniqueOrder", rmOld = T)
-    insertTable(Matrix = dt[d,], tableName = "linkORFsToTxUnique", rmOld = T)
+    insertTable(Matrix = data.table(d), tableName = "toUniqueOrder", rmOld = TRUE)
+    insertTable(Matrix = dt[d,], tableName = "linkORFsToTxUnique", rmOld = TRUE)
     save(grl, file = p(dataFolder,"/uniqueUorfsAsGRWithTx.rdata"))
 
   } else {
