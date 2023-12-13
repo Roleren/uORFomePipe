@@ -21,15 +21,16 @@ Depends:
   DBI, 
   data.table
 Imports:
-  tools,
-  h2o,
-  ggplot2,
   BiocParallel, 
   biomaRt,
   biomartr,
   cowplot,
+  ggplot2,
   ggpubr,
   gridExtra,
+  h2o,
   RSQLite,
+  scales,
+  tools,
   VennDiagram
 RoxygenNote: 7.2.3

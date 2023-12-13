@@ -125,6 +125,8 @@ getGeneralRiboFeatures <- function(df.rfp, df.rna = NULL,
         message(paths[[x]])
         X <- paths[[x]]
         Y <- paths.rna[[x]]
+        seqlevels(grl) <- seqlevels(tx)
+        seqinfo(grl) <- seqinfo(tx)
         style <- seqlevelsStyle(grl)
         RNA <- if (!is.null(Y)) {
           fimport(Y, style)

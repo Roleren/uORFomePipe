@@ -27,6 +27,11 @@
 #' Which start codons can the CDS you train on have ?
 #' @param stopCodons.cds.allowed character, default same as stopCodons argument
 #' Which stop codons can the CDS you train on have ?
+#' @param features features to train model on, any of the features created
+#' during ORFik::computeFeatures, default:
+#' \code{c("countRFP", "disengagementScores", "entropyRFP", "floss",
+#' "fpkmRFP","ioScore", "ORFScores", "RRS", "RSS", "startCodonCoverage",
+#' "startRegionCoverage","startRegionRelative")}
 #' @importFrom tools file_ext
 #' @importFrom BiocParallel registered
 #' @export
@@ -139,8 +144,8 @@ checkAndInitPipe <- function(mainPath, df.rfp, df.rna, df.cage,
     } else stop("when txdb is path, must be one of .gff, .gtf and .db")
     loadRegions(txdb, c("tx", "cds", "fiveUTRs", "threeUTRs"))
 
-    saveRDS(tx, file = p(dataFolder, "/tx.rds"))
-    saveRDS(cds, file = p(dataFolder, "/cds.rds"))
+    saveRDS(get("tx", mode = "S4"), file = p(dataFolder, "/tx.rds"))
+    saveRDS(get("cds", mode = "S4"), file = p(dataFolder, "/cds.rds"))
     saveRDS(fiveUTRs, file = p(dataFolder, "/fiveUTRs.rds"))
     saveRDS(threeUTRs, file = p(dataFolder, "/threeUTRs.rds"))
 

@@ -84,7 +84,7 @@ perSampleCountPlot <- function(mode = "uORF", sort.by = "count") {
       scale_y_continuous(labels = scales::scientific) +
       theme_bw() +
       themes.no.y +
-      guides(fill=FALSE) +
+      guides(fill="none") +
       coord_flip()
     cageAll
   }
@@ -375,6 +375,7 @@ varianceTissueUsage <- function(tissue1, tissue2, pred = readTable("tissueAtlasB
 #' if redoing the findOverlaps does not find all orfs within fiveUTRs
 #' it means that some orfs are outside the mapping area
 #' this should not happen!
+#' @param grl a GRangesList
 validateExperiments <- function(grl){
 
   fiveUTRs <- leaderAllSpanning()

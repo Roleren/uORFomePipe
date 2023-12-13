@@ -23,11 +23,6 @@
 #' this number is 1/6 of maximum size of ORFs (max size 600 if artificialLength is 100)
 #' Will sample random size from 6 to that number, if max.artificial.length is
 #' 2, you can get artificial ORFs of size (6, 9 or 12) (6, + 6 + (3x1), 6 + (3x2))
-#' @param features features to train model on, any of the features created
-#' during ORFik::computeFeatures, default:
-#' \code{c("countRFP", "disengagementScores", "entropyRFP", "floss",
-#' "fpkmRFP","ioScore", "ORFScores", "RRS", "RSS", "startCodonCoverage",
-#' "startRegionCoverage","startRegionRelative")}
 #' @param requiredActiveCds numeric, default 30. How many CDSs are required to be
 #' detected active. Size of minimum positive training set. Will abort if not
 #' bigger than this number.
@@ -37,7 +32,7 @@
 #' prediction is 0 or 1.
 #' @importFrom BiocParallel register
 #' @importFrom BiocParallel bpparam
-#' @import ORFik
+#' @import ORFik scales
 #' @export
 #' @examples
 #' mainPath <- "~/bio/results/uORFome_Zebrafish"

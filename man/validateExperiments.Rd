@@ -6,6 +6,9 @@
 \usage{
 validateExperiments(grl)
 }
+\arguments{
+\item{grl}{a GRangesList}
+}
 \description{
 This is a check to see that pipeline have done everything correctly
 if redoing the findOverlaps does not find all orfs within fiveUTRs

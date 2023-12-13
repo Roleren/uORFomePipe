@@ -47,6 +47,12 @@ Which start codons can the CDS you train on have ?}
 
 \item{stopCodons.cds.allowed}{character, default same as stopCodons argument
 Which stop codons can the CDS you train on have ?}
+
+\item{features}{features to train model on, any of the features created
+during ORFik::computeFeatures, default:
+\code{c("countRFP", "disengagementScores", "entropyRFP", "floss",
+"fpkmRFP","ioScore", "ORFScores", "RRS", "RSS", "startCodonCoverage",
+"startRegionCoverage","startRegionRelative")}}
 }
 \description{
 Make directory structure for orf finding, create database
